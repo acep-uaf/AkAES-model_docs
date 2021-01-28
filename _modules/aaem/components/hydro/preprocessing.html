@@ -1,0 +1,261 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.hydro.preprocessing &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.hydro.preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Hydropower preprocessing </span>
+<span class="sd">------------------------</span>
+
+<span class="sd">preprocessing functions for Diesel Efficiency component  </span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">read_csv</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">UNKNOWN</span>
+<span class="kn">from</span> <span class="nn">yaml</span> <span class="k">import</span> <span class="n">dump</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="c1">## preprocess the existing projects</span>
+<div class="viewcode-block" id="preprocess"><a class="viewcode-back" href="../../../../aaem.components.hydro.html#aaem.components.hydro.preprocessing.preprocess">[docs]</a><span class="k">def</span> <span class="nf">preprocess</span> <span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;preprocess data related to existing projects</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    preprocessor: preprocessor.Preprocessor</span>
+<span class="sd">        a preprocessor object</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        project names</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;Hydropower&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s1">&#39;start year&#39;</span><span class="p">:</span> <span class="mi">2016</span><span class="p">,</span>
+            <span class="s1">&#39;lifetime&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+            
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;phase&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;proposed capacity&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;proposed generation&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;generation capital cost&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;transmission capital cost&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;expected years to operation&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;source&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            
+            <span class="s1">&#39;percent o&amp;m&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s1">&#39;percent heat recovered&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">intertie_status</span> <span class="o">==</span> <span class="s1">&#39;child&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">base</span>
+    <span class="k">if</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">intertie_status</span> <span class="o">==</span> <span class="s1">&#39;parent&#39;</span> <span class="ow">and</span>\
+        <span class="n">preprocessor</span><span class="o">.</span><span class="n">process_intertie</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">base</span>
+    
+    <span class="n">projects</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">p_data</span> <span class="o">=</span> <span class="p">{}</span>
+ 
+    <span class="n">project_data</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
+        <span class="s2">&quot;hydro_projects_potential.csv&quot;</span><span class="p">),</span>
+        <span class="n">comment</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span><span class="n">index_col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        
+    <span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
+        <span class="s1">&#39;project_development_timeframes.csv&#39;</span>
+    <span class="p">)</span>
+    <span class="n">timeframes</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span>
+                    <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="s1">&#39;Hydroelectric&#39;</span><span class="p">]</span>
+    
+    
+    <span class="n">ids</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">communities</span> <span class="o">+</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">aliases</span>
+    <span class="k">if</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">intertie_status</span> <span class="o">==</span> <span class="s1">&#39;child&#39;</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[]</span>
+        
+    <span class="c1">#~ print ids</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">project_data</span> <span class="o">=</span> <span class="n">project_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span>
+        <span class="c1">#~ print project_data</span>
+        <span class="n">project_data</span> <span class="o">=</span> \
+            <span class="n">project_data</span><span class="p">[</span><span class="n">project_data</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">project_data</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">:</span>
+            <span class="n">project_data</span> <span class="o">=</span> <span class="n">project_data</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1">#~ print e</span>
+        <span class="n">project_data</span> <span class="o">=</span> <span class="p">[]</span>
+        
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1">#~ print project_data</span>
+    <span class="k">for</span> <span class="n">p_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">project_data</span><span class="p">)):</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="n">project_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">p_idx</span><span class="p">]</span>
+        
+        <span class="c1">#~ print &#39;--------&#39;</span>
+        <span class="c1">#~ print cp.values</span>
+        <span class="c1">#~ print &#39;--------&#39;</span>
+        
+        <span class="n">p_name</span> <span class="o">=</span> <span class="s1">&#39;hydro+project_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">p_idx</span><span class="p">)</span> 
+        <span class="k">if</span> <span class="n">cp</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> \
+            <span class="p">[</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">communities</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">aliases</span><span class="p">[</span><span class="mi">0</span><span class="p">]]:</span>
+            <span class="n">p_name</span> <span class="o">+=</span>  <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">cp</span><span class="o">.</span><span class="n">name</span>
+            
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Phase Completed&#39;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="n">phase</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="n">phase</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">preprocessor</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="s1">&#39;Hydropower Projects&#39;</span><span class="p">,</span> 
+                                        <span class="s1">&#39;missing value assuming Reconnaissance&#39;</span><span class="p">)</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="s1">&#39;Reconnaissance&#39;</span>
+        
+            
+        
+        <span class="n">proposed_capacity</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;AAEM Capacity (kW)&#39;</span><span class="p">])</span>
+        <span class="n">proposed_generation</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;AAEM Generation (kWh)&#39;</span><span class="p">])</span>
+        <span class="c1">#~ distance_to_resource = float(cp[&#39;Distance&#39;])</span>
+        <span class="n">generation_capital_cost</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Construction Cost (2014$)&#39;</span><span class="p">])</span>
+        <span class="n">transmission_capital_cost</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Transmission Cost (current)&#39;</span><span class="p">])</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Source&#39;</span><span class="p">]</span>
+        <span class="c1">#~ expected_years_to_operation = UNKNOWN</span>
+        <span class="k">if</span> <span class="n">phase</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
+            <span class="n">preprocessor</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="s1">&#39;Hydropower Projects&#39;</span><span class="p">,</span> 
+                                            <span class="s1">&#39;&quot;0&quot; corrected to Reconnaissance&#39;</span><span class="p">)</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="s2">&quot;Reconnaissance&quot;</span>
+            
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">yto</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">timeframes</span><span class="p">[</span><span class="n">phase</span><span class="p">])))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="n">yto</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="n">start_year</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;Hydropower&#39;</span><span class="p">][</span><span class="s1">&#39;start year&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">yto</span>
+
+        <span class="n">projects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p_name</span><span class="p">)</span>
+        <span class="c1">#actual name</span>
+        <span class="n">a_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Project&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">a_name</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Stream&#39;</span><span class="p">]))</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Stream&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="s1">&#39;nan&#39;</span><span class="p">:</span>
+            <span class="n">a_name</span> <span class="o">+=</span> <span class="s1">&#39; -- &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Stream&#39;</span><span class="p">])</span>
+        <span class="c1">#~ print a_name</span>
+        <span class="n">a_name</span> <span class="o">=</span> \
+            <span class="s1">&#39;&quot;&#39;</span> <span class="o">+</span> <span class="n">a_name</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;unicode_escape&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">,</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span>
+        <span class="c1">#~ print a_name</span>
+        <span class="n">project</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Hydropower&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;start year&#39;</span><span class="p">:</span> <span class="n">start_year</span><span class="p">,</span>
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">a_name</span><span class="p">,</span>
+            <span class="s1">&#39;phase&#39;</span><span class="p">:</span> <span class="n">phase</span><span class="p">,</span>
+            <span class="s1">&#39;proposed capacity&#39;</span><span class="p">:</span> <span class="n">proposed_capacity</span><span class="p">,</span>
+            <span class="s1">&#39;proposed generation&#39;</span><span class="p">:</span> <span class="n">proposed_generation</span><span class="p">,</span>
+            <span class="s1">&#39;generation capital cost&#39;</span><span class="p">:</span> <span class="n">generation_capital_cost</span><span class="p">,</span>
+            <span class="s1">&#39;transmission capital cost&#39;</span><span class="p">:</span> <span class="n">transmission_capital_cost</span><span class="p">,</span>
+            <span class="c1">#~ &#39;expected years to operation&#39;: expected_years_to_operation,</span>
+            <span class="s1">&#39;source&#39;</span><span class="p">:</span><span class="n">source</span>
+        <span class="p">})</span>
+        <span class="c1">#~ print project </span>
+        <span class="n">p_data</span><span class="p">[</span><span class="n">p_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">project</span> 
+        <span class="c1">#~ print p_data[p_name] </span>
+
+    
+    <span class="n">p_data</span><span class="p">[</span><span class="s1">&#39;no project&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span>
+    <span class="c1">#~ print p_data</span>
+    <span class="k">return</span> <span class="n">p_data</span></div>
+    
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

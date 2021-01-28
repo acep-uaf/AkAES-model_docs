@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.non_residential.preprocessing &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.non_residential.preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Non-Residential Efficiency preprocessing</span>
+<span class="sd">----------------------------------------</span>
+
+<span class="sd">preprocessing functions for Non-residential Efficiency component</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1">#~ import os.path</span>
+<span class="c1">#~ from pandas import read_csv</span>
+
+<span class="c1"># preprocessing in preprocessor</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">read_csv</span><span class="p">,</span> <span class="n">concat</span><span class="p">,</span> <span class="n">DataFrame</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<div class="viewcode-block" id="get_number_buildings"><a class="viewcode-back" href="../../../../aaem.components.non_residential.html#aaem.components.non_residential.preprocessing.get_number_buildings">[docs]</a><span class="k">def</span> <span class="nf">get_number_buildings</span> <span class="p">(</span><span class="n">community</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">diagnostics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load # buildings from file</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    community: list</span>
+<span class="sd">        list of community ids (community names)</span>
+<span class="sd">    data_dir: path</span>
+<span class="sd">        path to data file</span>
+<span class="sd">    diagnostics: Diagnostics</span>
+<span class="sd">        diagnostics object</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int:</span>
+<span class="sd">        # buildings in community</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">datafile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;non-res_count.csv&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+            <span class="n">read_csv</span><span class="p">(</span>
+                <span class="n">datafile</span> <span class="p">,</span>
+                <span class="n">comment</span> <span class="o">=</span> <span class="s2">&quot;#&quot;</span><span class="p">,</span>
+                <span class="n">index_col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="n">header</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">community</span><span class="p">][</span><span class="s1">&#39;Buildings&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="s2">&quot;Non-residential Efficiency: Community &quot;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;&quot;</span> <span class="o">+</span> <span class="n">community</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; does not have an entry in &quot;</span>
+             <span class="s2">&quot;&quot;</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">datafile</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;, using 0&quot;</span>
+        <span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="get_consumption_estimates"><a class="viewcode-back" href="../../../../aaem.components.non_residential.html#aaem.components.non_residential.preprocessing.get_consumption_estimates">[docs]</a><span class="k">def</span> <span class="nf">get_consumption_estimates</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">population</span><span class="p">,</span> <span class="n">diagnostics</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get consumption estimates</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_dir: path</span>
+<span class="sd">        path to datafile</span>
+<span class="sd">    population: int</span>
+<span class="sd">        population size for estimates</span>
+<span class="sd">    diagnostics: Diagnostics</span>
+<span class="sd">        diagnostics object</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DataFrame</span>
+<span class="sd">        estimate data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">datafile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;non-res_consumption_estimates.csv&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">datafile</span> <span class="p">,</span><span class="n">comment</span> <span class="o">=</span> <span class="s2">&quot;#&quot;</span><span class="p">,</span><span class="n">index_col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">units</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="s2">&quot;Estimate units&quot;</span><span class="p">])</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">itm</span> <span class="ow">in</span> <span class="n">units</span><span class="p">:</span>
+        <span class="n">col</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="s2">&quot;Estimate units&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">itm</span><span class="p">]</span>\
+                      <span class="p">[(</span><span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="s2">&quot;Estimate units&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">itm</span><span class="p">]</span>\
+                      <span class="p">[</span><span class="s2">&quot;Lower Limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">population</span><span class="p">)]</span>\
+                      <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="s2">&quot;Estimate units&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">itm</span><span class="p">]</span>\
+                      <span class="p">[(</span><span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="s2">&quot;Estimate units&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">itm</span><span class="p">]</span>\
+                      <span class="p">[</span><span class="s2">&quot;Upper Limit&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">population</span><span class="p">)]</span>
+        <span class="n">l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">concat</span><span class="p">(</span><span class="n">l</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;Estimate units&quot;</span><span class="p">)</span>
+    <span class="k">del</span><span class="p">(</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;Lower Limit&quot;</span><span class="p">])</span>
+    <span class="k">del</span><span class="p">(</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;Upper Limit&quot;</span><span class="p">])</span>
+    <span class="n">data</span> <span class="o">=</span>  <span class="n">data</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;building type&#39;</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+
+<div class="viewcode-block" id="get_building_inventory"><a class="viewcode-back" href="../../../../aaem.components.non_residential.html#aaem.components.non_residential.preprocessing.get_building_inventory">[docs]</a><span class="k">def</span> <span class="nf">get_building_inventory</span> <span class="p">(</span><span class="n">community</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">diagnostics</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;load the building inventory</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    community: list</span>
+<span class="sd">        list of community ids (community names)</span>
+<span class="sd">    data_dir: path</span>
+<span class="sd">        path to datafile</span>
+<span class="sd">    diagnostics: Diagnostics</span>
+<span class="sd">        diagnostics object</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DataFrame</span>
+<span class="sd">        building inventory</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">datafile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s1">&#39;non-res_buildings.csv&#39;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">datafile</span><span class="p">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="n">index_col</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">order</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;int_index&#39;</span> <span class="p">,</span> <span class="s1">&#39;Building Type&#39;</span><span class="p">,</span> <span class="s1">&#39;Biomass&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Biomass Post&#39;</span><span class="p">,</span> <span class="s1">&#39;Electric&#39;</span><span class="p">,</span> <span class="s1">&#39;Electric Post&#39;</span><span class="p">,</span> <span class="s1">&#39;Fuel Oil&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Fuel Oil Post&#39;</span><span class="p">,</span> <span class="s1">&#39;HW District&#39;</span><span class="p">,</span> <span class="s1">&#39;HW District Post&#39;</span><span class="p">,</span> <span class="s1">&#39;Natural Gas&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Natural Gas Post&#39;</span><span class="p">,</span> <span class="s1">&#39;Propane&#39;</span><span class="p">,</span> <span class="s1">&#39;Propane Post&#39;</span><span class="p">,</span> <span class="c1">#&#39;Retrofits Done&#39;,</span>
+        <span class="s1">&#39;Square Feet&#39;</span><span class="p">,</span> <span class="s1">&#39;implementation cost&#39;</span><span class="p">]</span>
+
+    <span class="c1">#~ print community</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">community</span><span class="p">]</span>
+        <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">order</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Building Type&#39;</span><span class="p">,</span> <span class="s1">&#39;int_index&#39;</span><span class="p">]]</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">numbers</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">numbers</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">r&#39;\S+&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1">#~ print data</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span>
+            <span class="s1">&#39;Non-residential Energy Efficiency: Building Inventory&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;no buildings in inventory creating empty inventory&#39;</span>
+        <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">order</span><span class="p">)</span>
+
+
+    <span class="c1">#~ print data</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;int_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;int_index&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="preprocess"><a class="viewcode-back" href="../../../../aaem.components.non_residential.html#aaem.components.non_residential.preprocessing.preprocess">[docs]</a><span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Preprocess Non-residential data</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    preprocessor: aaem.preprocessor.Preprocessor object</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        data for component configuration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#~ if not &#39;population&#39; in kwargs:</span>
+        <span class="c1">#~ raise StandardError, &#39;Non-residential preprocessing needs population&#39;</span>
+
+    <span class="c1">#~ population = kwargs[&#39;population&#39;]</span>
+
+    <span class="n">refit_cost</span> <span class="o">=</span> <span class="mf">7.0</span>
+    <span class="c1">#~ if &#39;non-res-refit-cost&#39; in kwargs:</span>
+        <span class="c1">#~ refit_cost = float(kwargs[&#39;non-res-refit-cost&#39;])</span>
+
+    <span class="n">cohort_multiplier</span> <span class="o">=</span> <span class="o">.</span><span class="mi">26</span> <span class="o">*</span> <span class="mi">100</span>
+    <span class="c1">#~ if &#39;non-res-cohort-savings-percent&#39; in kwargs:</span>
+        <span class="c1">#~ cohort_multiplier = float(kwargs[&#39;non-res-cohort-savings-percent&#39;])</span>
+
+    <span class="n">start_year</span> <span class="o">=</span> <span class="mi">2017</span>
+    <span class="c1">#~ if &#39;non-res-start-year&#39; in kwargs:</span>
+        <span class="c1">#~ start_year = int(kwargs[&#39;non-res-start-year&#39;])</span>
+
+    <span class="n">lifetime</span> <span class="o">=</span> <span class="mi">15</span>
+    <span class="c1">#~ if &#39;non-res-project-lifetime&#39; in kwargs:</span>
+        <span class="c1">#~ lifetime = int(kwargs[&#39;non-res-project-lifetime&#39;])</span>
+
+    <span class="n">heating_cost_percent</span> <span class="o">=</span> <span class="mf">0.6</span> <span class="o">*</span> <span class="mi">100</span> <span class="c1"># convert to whole %</span>
+    <span class="c1">#~ if &#39;non-res-heating-cost-percent&#39; in kwargs:</span>
+        <span class="c1">#~ heating_cost_percent = float(kwargs[&#39;non-res-heating-cost-percent&#39;])</span>
+
+
+    <span class="c1"># The waste oil price is N% of the heating oil price</span>
+    <span class="n">waste_oil_cost_percent</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="mi">100</span><span class="c1"># convert to whole %</span>
+    <span class="c1">#~ if &#39;non-res-waste-oil-cost-percent&#39; in kwargs:</span>
+        <span class="c1">#~ waste_oil_cost_percent = float(kwargs[&#39;non-res-waste-oil-cost-percent&#39;])</span>
+
+    <span class="n">inventory_ids</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">GNIS_ids</span>
+    <span class="n">count_ids</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">communities</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">process_intertie</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">intertie_status</span> <span class="o">==</span> <span class="s1">&#39;child&#39;</span><span class="p">:</span>
+            <span class="n">inventory_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">inventory_ids</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="n">count_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">count_ids</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inventory_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">inventory_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">count_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">count_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="c1">#~ print inventory_ids</span>
+    <span class="n">population</span> <span class="o">=</span> \
+        <span class="n">preprocessor</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;community&#39;</span><span class="p">][</span><span class="s1">&#39;population&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">2010</span><span class="p">][</span><span class="s1">&#39;population&#39;</span><span class="p">]</span>
+    <span class="c1">#~ print &#39;C&#39;, population</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">process_intertie</span> <span class="ow">and</span> \
+        <span class="n">preprocessor</span><span class="o">.</span><span class="n">intertie_status</span> <span class="o">==</span> <span class="s1">&#39;child&#39;</span><span class="p">:</span>
+        <span class="n">population</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">load_population</span><span class="p">(</span><span class="n">get_it_ids</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="mi">2010</span><span class="p">][</span><span class="s1">&#39;population&#39;</span><span class="p">]</span>
+
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;Non-residential Energy Efficiency&#39;</span><span class="p">:{</span>
+            <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s1">&#39;start year&#39;</span><span class="p">:</span> <span class="n">start_year</span><span class="p">,</span>
+            <span class="s1">&#39;lifetime&#39;</span><span class="p">:</span> <span class="n">lifetime</span><span class="p">,</span>
+            <span class="s1">&#39;average refit cost&#39;</span><span class="p">:</span> <span class="n">refit_cost</span><span class="p">,</span>
+            <span class="s1">&#39;cohort savings percent&#39;</span><span class="p">:</span> <span class="n">cohort_multiplier</span><span class="p">,</span>
+            <span class="s1">&#39;heating percent&#39;</span><span class="p">:</span> <span class="n">heating_cost_percent</span><span class="p">,</span>
+            <span class="s1">&#39;waste oil cost percent&#39;</span><span class="p">:</span> <span class="n">waste_oil_cost_percent</span><span class="p">,</span>
+            <span class="s1">&#39;number buildings&#39;</span><span class="p">:</span> <span class="n">get_number_buildings</span><span class="p">(</span>
+                <span class="n">count_ids</span><span class="p">,</span>
+                <span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
+                <span class="n">preprocessor</span><span class="o">.</span><span class="n">diagnostics</span>
+            <span class="p">),</span>
+            <span class="s1">&#39;consumption estimates&#39;</span><span class="p">:</span>  <span class="n">get_consumption_estimates</span><span class="p">(</span>
+                <span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
+                <span class="n">population</span><span class="p">,</span>
+                <span class="n">preprocessor</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">),</span>
+            <span class="s1">&#39;building inventory&#39;</span><span class="p">:</span> <span class="n">get_building_inventory</span><span class="p">(</span>
+                <span class="n">inventory_ids</span><span class="p">,</span>
+                <span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
+                <span class="n">preprocessor</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

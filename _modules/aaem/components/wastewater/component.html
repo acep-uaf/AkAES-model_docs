@@ -1,0 +1,586 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.wastewater.component &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.wastewater.component</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Water Wastewater Component Body</span>
+<span class="sd">-------------------------------</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<span class="kn">from</span> <span class="nn">aaem.components.annual_savings</span> <span class="k">import</span> <span class="n">AnnualSavings</span>
+<span class="kn">from</span> <span class="nn">aaem.community_data</span> <span class="k">import</span> <span class="n">CommunityData</span>
+<span class="kn">from</span> <span class="nn">aaem.forecast</span> <span class="k">import</span> <span class="n">Forecast</span>
+<span class="kn">from</span> <span class="nn">aaem.diagnostics</span> <span class="k">import</span> <span class="n">Diagnostics</span>
+<span class="kn">import</span> <span class="nn">aaem.constants</span> <span class="k">as</span> <span class="nn">constants</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">COMPONENT_NAME</span><span class="p">,</span> <span class="n">UNKNOWN</span>
+
+
+<div class="viewcode-block" id="WaterWastewaterSystems"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems">[docs]</a><span class="k">class</span> <span class="nc">WaterWastewaterSystems</span> <span class="p">(</span><span class="n">AnnualSavings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wind power component of the Alaska Affordable Energy Model: This</span>
+<span class="sd">    module estimates potential improvements in heating and electrical</span>
+<span class="sd">    efficiency to water and wastewater systems. Consumption and savings are</span>
+<span class="sd">    calculated based on system type, population, and heating degree days</span>
+<span class="sd">    per year for a community. Project costs are based on audits, or estimated</span>
+<span class="sd">    by the community size.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    community_data : CommunityData</span>
+<span class="sd">        CommunityData Object for a community</span>
+<span class="sd">    forecast : Forecast</span>
+<span class="sd">        forecast for a community</span>
+<span class="sd">    diagnostics : diagnostics, optional</span>
+<span class="sd">        diagnostics for tracking error/warning messages</span>
+<span class="sd">    prerequisites : dictionary of components, optional</span>
+<span class="sd">        prerequisite component data this component has no prerequisites</span>
+<span class="sd">        leave empty</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    diagnostics : diagnostics</span>
+<span class="sd">        for tracking error/warning messages</span>
+<span class="sd">        initial value: diag or new diagnostics object</span>
+<span class="sd">    forecast : forecast</span>
+<span class="sd">        community forecast for estimating future values</span>
+<span class="sd">        initial value: forecast</span>
+<span class="sd">    cd : dictionary</span>
+<span class="sd">        general data for a community.</span>
+<span class="sd">        Initial value: &#39;community&#39; section of community_data</span>
+<span class="sd">    comp_specs : dictionary</span>
+<span class="sd">        component specific data for a community.</span>
+<span class="sd">        Initial value: &#39;water wastewater&#39; section of community_data</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    aaem.community_data :</span>
+<span class="sd">        community data module, see information on CommintyData Object</span>
+<span class="sd">    aaem.forecast :</span>
+<span class="sd">        forecast module, see information on Forecast Object</span>
+
+<span class="sd">    aaem.diagnostics :</span>
+<span class="sd">        diagnostics module, see information on diagnostics Object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community_data</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span>
+                        <span class="n">diag</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prerequisites</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Class initialiser.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        community_data : CommunityData</span>
+<span class="sd">            CommunityData Object for a community</span>
+<span class="sd">        forecast : Forecast</span>
+<span class="sd">            forecast for a community</span>
+<span class="sd">        diagnostics : diagnostics, optional</span>
+<span class="sd">            diagnostics for tracking error/warning messages</span>
+<span class="sd">        prerequisites : dictionary of components, optional</span>
+<span class="sd">            prerequisite component data</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span> <span class="o">=</span> <span class="n">COMPONENT_NAME</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">=</span> <span class="n">diag</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">=</span> <span class="n">diagnostics</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cd</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="s1">&#39;community&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">COMPONENT_NAME</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span> <span class="o">=</span> <span class="n">forecast</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_project_life_details</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;start year&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;lifetime&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="n">average</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;average refit cost&#39;</span><span class="p">]</span>
+        <span class="n">mult</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span><span class="s1">&#39;community&#39;</span><span class="p">,</span><span class="s1">&#39;regional construction multiplier&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cost_per_person</span> <span class="o">=</span> <span class="n">average</span> <span class="o">*</span> <span class="n">mult</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;heating degree days&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span><span class="o">.</span><span class="n">get_population</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>\
+                                                           <span class="p">[</span><span class="s1">&#39;Year&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">population_fc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span><span class="o">.</span><span class="n">get_population</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_year</span><span class="p">,</span>
+                                                                 <span class="bp">self</span><span class="o">.</span><span class="n">end_year</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_annual_electric_savings"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_annual_electric_savings">[docs]</a>    <span class="k">def</span> <span class="nf">calc_annual_electric_savings</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate annual electric savings created by the project.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        annual_electric_savings : np.array</span>
+<span class="sd">            electric savings ($/year) are the difference in the base</span>
+<span class="sd">        and proposed fuel costs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_baseline_kWh_cost</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_proposed_kWh_cost</span> <span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annual_electric_savings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_cost</span> <span class="o">-</span> \
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">proposed_kWh_cost</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_baseline_kWh_cost"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_baseline_kWh_cost">[docs]</a>    <span class="k">def</span> <span class="nf">calc_baseline_kWh_cost</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate Baseline electric cost.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        baseline_generation_cost : np.array</span>
+<span class="sd">            current cost of generation ($/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kWh_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;electric prices&quot;</span><span class="p">]</span><span class="o">.</span>\
+                                            <span class="n">ix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_year</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">end_year</span><span class="p">]</span>
+        <span class="n">kWh_cost</span> <span class="o">=</span> <span class="n">kWh_cost</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elec_price</span> <span class="o">=</span> <span class="n">kWh_cost</span>
+        <span class="c1"># kWh/yr*$/kWh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span> <span class="o">*</span> <span class="n">kWh_cost</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_proposed_kWh_cost"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_proposed_kWh_cost">[docs]</a>    <span class="k">def</span> <span class="nf">calc_proposed_kWh_cost</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate Proposed electric cost.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        proposed_generation_cost : np.array</span>
+<span class="sd">            current cost of generation ($/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kWh_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;electric prices&quot;</span><span class="p">]</span><span class="o">.</span>\
+                                            <span class="n">ix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_year</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">end_year</span><span class="p">]</span>
+        <span class="n">kWh_cost</span> <span class="o">=</span> <span class="n">kWh_cost</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># kWh/yr*$/kWh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_kWh_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposed_kWh_consumption</span> <span class="o">*</span> <span class="n">kWh_cost</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_annual_heating_savings"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_annual_heating_savings">[docs]</a>    <span class="k">def</span> <span class="nf">calc_annual_heating_savings</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate annual heating savings created by the project.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        annual_heating_savings : np.array</span>
+<span class="sd">            heating savings ($/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_proposed_HF_cost</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_baseline_HF_cost</span><span class="p">()</span>
+        <span class="c1"># $ / yr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annual_heating_savings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_cost</span> <span class="o">-</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">proposed_HF_cost</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_proposed_HF_cost"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_proposed_HF_cost">[docs]</a>    <span class="k">def</span> <span class="nf">calc_proposed_HF_cost</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate proposed HF cost.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        proposed_HF_cost : np.array</span>
+<span class="sd">            heating savings ($/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_HF_cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_life</span><span class="p">)</span>
+        <span class="n">fuel_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diesel_prices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;heating fuel premium&#39;</span><span class="p">]</span><span class="c1"># $/gal</span>
+        <span class="n">wood_price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;cordwood price&#39;</span><span class="p">]</span>
+        <span class="c1"># are there ever o&amp;m costs</span>
+        <span class="c1"># $/gal * gal/yr = $/year</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_HF_cost</span> <span class="o">+=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">proposed_fuel_Hoil_consumption</span> <span class="o">*</span> <span class="n">fuel_cost</span> <span class="o">+</span>\
+                <span class="bp">self</span><span class="o">.</span><span class="n">proposed_fuel_biomass_consumption</span> <span class="o">*</span> <span class="n">wood_price</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_baseline_HF_cost"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_baseline_HF_cost">[docs]</a>    <span class="k">def</span> <span class="nf">calc_baseline_HF_cost</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate baseline HF cost.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        baseline_HF_cost : np.array</span>
+<span class="sd">            heating savings ($/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_life</span><span class="p">)</span>
+        <span class="n">fuel_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diesel_prices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;heating fuel premium&#39;</span><span class="p">]</span> <span class="c1">#$/gal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hoil_price</span> <span class="o">=</span> <span class="n">fuel_cost</span>
+        <span class="n">wood_price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;cordwood price&#39;</span><span class="p">]</span>
+        <span class="c1"># $/gal * gal/yr + $/cors * cord/yr= $/year</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_cost</span> <span class="o">+=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_Hoil_consumption</span> <span class="o">*</span> <span class="n">fuel_cost</span> <span class="o">+</span>\
+                <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_biomass_consumption</span> <span class="o">*</span> <span class="n">wood_price</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.run"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;capital costs&#39;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">}):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the component. The Annual Total Savings,Annual Costs,</span>
+<span class="sd">        Annual Net Benefit, NPV Benefits, NPV Costs, NPV Net Benefits,</span>
+<span class="sd">        Benefit Cost Ratio, Levelized Cost of Energy,</span>
+<span class="sd">        and Internal Rate of Return will all be calculated. There must be a</span>
+<span class="sd">        known Heat Recovery project for this component to run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scalers: dictionary of valid scalers, optional</span>
+<span class="sd">            Scalers to adjust normal run variables.</span>
+<span class="sd">            See note on accepted  scalers</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run : bool</span>
+<span class="sd">            True in the component runs to completion, False otherwise</span>
+<span class="sd">        reason : string</span>
+<span class="sd">            lists reason for failure if run == False</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">            Accepted scalers: capital costs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;file id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">tag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;water-wastewater&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Not a water/wastewater project.&quot;</span>
+            <span class="k">return</span>
+        <span class="c1">#~ print self.comp_specs[&#39;data&#39;][&#39;assumption type used&#39;]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;assumption type used&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;UNKNOWN&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Water/wastewater system type unknown.&quot;</span>
+            <span class="c1">#~ print self.reason</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model electricity&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_baseline_kWh_consumption</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_proposed_kWh_consumption</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_savings_kWh_consumption</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model heating fuel&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_baseline_HF_consumption</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_proposed_HF_consumption</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_savings_HF_consumption</span><span class="p">()</span>
+
+            <span class="c1">#~ years = range(self.start_year,self.end_year)</span>
+            <span class="c1">#~ self.forecast.add_heating_fuel_column(\</span>
+                        <span class="c1">#~ &quot;heating_fuel_water-wastewater_consumed [gallons/year]&quot;,</span>
+                         <span class="c1">#~ years,</span>
+                         <span class="c1">#~ self.baseline_HF_consumption*constants.mmbtu_to_gal_HF)</span>
+            <span class="c1">#~ self.forecast.add_heating_fuel_column(\</span>
+                   <span class="c1">#~ &quot;heating_fuel_water-wastewater_consumed [mmbtu/year]&quot;, years,</span>
+                    <span class="c1">#~ self.baseline_HF_consumption)</span>
+
+            <span class="c1">#~ self.forecast.add_heat_demand_column(\</span>
+                        <span class="c1">#~ &quot;heat_energy_demand_water-wastewater [mmbtu/year]&quot;,</span>
+                     <span class="c1">#~ years, self.baseline_HF_consumption)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model financial&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_capital_costs</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_diesel_prices</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_electric_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_heating_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_total_savings</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;interest rate&#39;</span><span class="p">],</span>
+                                            <span class="n">scalers</span><span class="p">[</span><span class="s1">&#39;capital costs&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_net_benefit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_npv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;discount rate&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;current year&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_levelized_costs</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+            <span class="c1">#~ self.levelized_cost_of_energy[&#39;MMBtu&#39;] *= .5</span>
+            <span class="c1">#~ self.levelized_cost_of_energy[&#39;kWh&#39;] *= .5</span>
+
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_baseline_kWh_consumption"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_baseline_kWh_consumption">[docs]</a>    <span class="k">def</span> <span class="nf">calc_baseline_kWh_consumption</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the baseline electric consumption.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        baseline_kWh_consumption : np.array</span>
+<span class="sd">            kWh/year values(floats) over the project lifetime</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hdd_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;HDD kWh&#39;</span><span class="p">])</span>
+        <span class="n">pop_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;pop kWh&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;kWh/yr&#39;</span><span class="p">]))</span> <span class="ow">and</span> \
+               <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;kWh/yr&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span> <span class="o">=</span>\
+                             <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;kWh/yr&#39;</span><span class="p">])</span><span class="o">+</span> \
+                            <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">population_fc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="o">*</span> <span class="n">pop_coeff</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1">#if not self.cd[&quot;w&amp;ww_energy_use_known&quot;]:</span>
+
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span> <span class="o">=</span> \
+                            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdd</span> <span class="o">*</span> <span class="n">hdd_coeff</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span> <span class="o">*</span> <span class="n">pop_coeff</span><span class="p">)</span> <span class="o">+</span> \
+                            <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">population_fc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="o">*</span> <span class="n">pop_coeff</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_baseline_HF_consumption"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_baseline_HF_consumption">[docs]</a>    <span class="k">def</span> <span class="nf">calc_baseline_HF_consumption</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the baseline Heating consumption.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        baseline_fuel_biomass_consumption : np.array</span>
+<span class="sd">            coord/year values(floats) over the project lifetime</span>
+<span class="sd">        baseline_fuel_Hoil_consumption : np.array</span>
+<span class="sd">            gal/year values(floats) over the project lifetime</span>
+<span class="sd">        baseline_HF_consumption : np.array</span>
+<span class="sd">            mmbtu/year values(floats) over the project lifetime</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hdd_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;HDD HF&#39;</span><span class="p">])</span>
+        <span class="n">pop_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;pop HF&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;HF Used&#39;</span><span class="p">]))</span> <span class="ow">and</span>\
+                <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;HF Used&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_life</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">+=</span> \
+                            <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;HF Used&#39;</span><span class="p">])</span> <span class="o">+</span>\
+                    <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">population_fc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="o">*</span> <span class="n">pop_coeff</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">hr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s2">&quot;HR Installed&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;TRUE&quot;</span>
+            <span class="n">hr_coeff</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">if</span> <span class="n">hr</span><span class="p">:</span>
+                <span class="n">hr_coeff</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;heat recovery multiplier&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">=</span> \
+                    <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">hdd</span> <span class="o">*</span> <span class="n">hdd_coeff</span><span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span> <span class="o">*</span> <span class="n">pop_coeff</span><span class="p">)</span>  <span class="o">+</span>\
+                    <span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">population_fc</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">)</span> <span class="o">*</span> <span class="n">pop_coeff</span><span class="p">))</span><span class="o">*</span> <span class="n">hr_coeff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_biomass_consumption</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">biomass</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;Biomass&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;TRUE&quot;</span>
+        <span class="k">if</span> <span class="n">biomass</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_biomass_consumption</span> <span class="o">=</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">/</span> \
+                            <span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span> <span class="o">*</span> <span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_cords</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+        <span class="c1"># don&#39;t want to detangle that</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_Hoil_consumption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_Hoil_consumption</span><span class="o">/</span><span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span> <span class="o">+</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_biomass_consumption</span><span class="o">/</span><span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_cords</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_proposed_kWh_consumption"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_proposed_kWh_consumption">[docs]</a>    <span class="k">def</span> <span class="nf">calc_proposed_kWh_consumption</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the proposed electric consumption.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        proposed_kWh_consumption : np.array</span>
+<span class="sd">            kWh/year values(floats) over the project lifetime</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">percent</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;electricity refit reduction&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">100.0</span><span class="p">)</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;kWh/yr&#39;</span><span class="p">])</span>
+        <span class="n">retro_con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;kWh/yr w/ retro&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">con</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">retro_con</span><span class="p">))</span> <span class="ow">and</span> \
+                <span class="p">(</span><span class="n">con</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">retro_con</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">percent</span> <span class="o">=</span> <span class="n">retro_con</span><span class="o">/</span><span class="n">con</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+                <span class="s1">&#39;Using caclulated electric consumption percent &#39;</span>\
+                <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">percent</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+        <span class="n">consumption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span> <span class="o">*</span> <span class="n">percent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_kWh_consumption</span> <span class="o">=</span> <span class="n">consumption</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_proposed_HF_consumption"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_proposed_HF_consumption">[docs]</a>    <span class="k">def</span> <span class="nf">calc_proposed_HF_consumption</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the proposed Heating consumption.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        proposed_fuel_biomass_consumption : np.array</span>
+<span class="sd">            coord/year values(floats) over the project lifetime</span>
+<span class="sd">        proposed_fuel_Hoil_consumption : np.array</span>
+<span class="sd">            gal/year values(floats) over the project lifetime</span>
+<span class="sd">        proposed_HF_consumption : np.array</span>
+<span class="sd">            mmbtu/year values(floats) over the project lifetime</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">percent</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;heating fuel refit reduction&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">100.0</span><span class="p">)</span>
+        <span class="n">con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;HF Used&#39;</span><span class="p">])</span>
+        <span class="n">retro_con</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s1">&#39;HF w/Retro&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">con</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">retro_con</span><span class="p">))</span>\
+            <span class="ow">and</span> <span class="p">(</span><span class="n">con</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">retro_con</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">percent</span> <span class="o">=</span> <span class="n">retro_con</span> <span class="o">/</span> <span class="n">con</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+                <span class="s1">&#39;Using caclulated HF consumption percent &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">percent</span> <span class="o">*</span> <span class="mi">100</span><span class="p">))</span>
+        <span class="n">consumption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_Hoil_consumption</span> <span class="o">*</span> <span class="n">percent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_fuel_Hoil_consumption</span> <span class="o">=</span> <span class="n">consumption</span>
+        <span class="n">consumption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_biomass_consumption</span> <span class="o">*</span> <span class="n">percent</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_fuel_biomass_consumption</span> <span class="o">=</span> <span class="n">consumption</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_HF_consumption</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">proposed_fuel_Hoil_consumption</span><span class="o">/</span><span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span> <span class="o">+</span>\
+                <span class="bp">self</span><span class="o">.</span><span class="n">proposed_fuel_biomass_consumption</span><span class="o">/</span><span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_cords</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_savings_kWh_consumption"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_savings_kWh_consumption">[docs]</a>    <span class="k">def</span> <span class="nf">calc_savings_kWh_consumption</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate the savings in kWh use</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        savings_kWh_consumption : np.array</span>
+<span class="sd">            electric savings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">savings_kWh_consumption</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span> <span class="o">-</span>\
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">proposed_kWh_consumption</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_savings_HF_consumption"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_savings_HF_consumption">[docs]</a>    <span class="k">def</span> <span class="nf">calc_savings_HF_consumption</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate the savings in HF use</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        savings_fuel_Hoil_consumption : np.array</span>
+<span class="sd">            heating oil savings (gal/year)</span>
+<span class="sd">        savings_fuel_biomass_consumption : np.array</span>
+<span class="sd">            heating oil savings (cord/year)</span>
+<span class="sd">        savings_HF_consumption : np.array</span>
+<span class="sd">            heating oil savings (mmbtu/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">savings_fuel_Hoil_consumption</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_Hoil_consumption</span> <span class="o">-</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">proposed_fuel_Hoil_consumption</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">savings_fuel_biomass_consumption</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">baseline_fuel_biomass_consumption</span> <span class="o">-</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">proposed_fuel_biomass_consumption</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">savings_HF_consumption</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">-</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">proposed_HF_consumption</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.calc_capital_costs"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.calc_capital_costs">[docs]</a>    <span class="k">def</span> <span class="nf">calc_capital_costs</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cost_per_person</span> <span class="o">=</span> <span class="mi">450</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the capital costs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        capital_costs : float</span>
+<span class="sd">             total cost of improvements ($), calculated from audit cost and</span>
+<span class="sd">             population size</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="s2">&quot;Implementation Cost&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="n">cc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;audit cost&quot;</span><span class="p">])</span> <span class="o">+</span> \
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">pop</span> <span class="o">*</span>  <span class="bp">self</span><span class="o">.</span><span class="n">cost_per_person</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.get_fuel_total_saved"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.get_fuel_total_saved">[docs]</a>    <span class="k">def</span> <span class="nf">get_fuel_total_saved</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get total fuel saved.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            the total fuel saved in gallons</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_heat</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_HF_consumption</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span> <span class="o">*</span>\
+            <span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span>
+
+        <span class="n">proposed_heat</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">proposed_HF_consumption</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span> <span class="o">*</span>\
+            <span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span>
+
+
+        <span class="n">base_elec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span> <span class="o">/</span>\
+                                <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;diesel generation efficiency&quot;</span><span class="p">]</span>
+
+        <span class="n">proposed_elec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span>\
+                                                <span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span> <span class="o">/</span> \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;diesel generation efficiency&quot;</span><span class="p">]</span>
+        <span class="c1">#~ print (base_elec - proposed_elec)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">base_heat</span> <span class="o">-</span> <span class="n">proposed_heat</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">base_elec</span> <span class="o">-</span> <span class="n">proposed_elec</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WaterWastewaterSystems.get_total_energy_produced"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.component.WaterWastewaterSystems.get_total_energy_produced">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_energy_produced</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get total energy produced.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            the total energy produced</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kWh_savings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">savings_kWh_consumption</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span>
+        <span class="n">HF_savings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">savings_HF_consumption</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">heating_cost_percent</span> <span class="o">=</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;heating cost percent&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">100.0</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">heating_cost_percent</span> <span class="o">=</span> <span class="o">.</span><span class="mi">5</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;kWh&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">kWh_savings</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">heating_cost_percent</span><span class="p">),</span>
+                <span class="s1">&#39;MMBtu&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">HF_savings</span><span class="p">,</span> <span class="n">heating_cost_percent</span><span class="p">)</span>
+               <span class="p">}</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

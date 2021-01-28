@@ -1,0 +1,621 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Hydropower Component &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="index.html" />
+    <link rel="up" title="Model Components" href="aaem.components.html" />
+    <link rel="next" title="Non-residential Efficiency Component" href="aaem.components.non_residential.html" />
+    <link rel="prev" title="Heat Recovery Component" href="aaem.components.heat_recovery.html" />
+
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hydropower-component">
+<h1>Hydropower Component<a class="headerlink" href="#hydropower-component" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="aaem.components.hydro.component.Hydropower">
+<em class="property">class </em><code class="descclassname">aaem.components.hydro.component.</code><code class="descname">Hydropower</code><span class="sig-paren">(</span><em>community_data</em>, <em>forecast</em>, <em>diag=None</em>, <em>prerequisites={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="aaem.components.annual_savings.html#aaem.components.annual_savings.annual_savings.AnnualSavings" title="aaem.components.annual_savings.annual_savings.AnnualSavings"><code class="xref py py-class docutils literal"><span class="pre">aaem.components.annual_savings.annual_savings.AnnualSavings</span></code></a></p>
+<p>Hydropower component component of the Alaska Affordable Energy Model: This module estimates the potential reduction in diesel fuel use from installation of hydropower projects. Proposed hydro generation is from proposed projects around the state. Financial savings result from decrease in diesel used in generation due to hydropower projects. Cost estimates for building hydropower infrastructure are also calculated.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Component requires an existing project for a community to be run to
+completion.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>community_data</strong> : CommunityData</p>
+<blockquote>
+<div><p>CommunityData Object for a community</p>
+</div></blockquote>
+<p><strong>forecast</strong> : Forecast</p>
+<blockquote>
+<div><p>forecast for a community</p>
+</div></blockquote>
+<p><strong>diagnostics</strong> : diagnostics, optional</p>
+<blockquote>
+<div><p>diagnostics for tracking error/warning messages</p>
+</div></blockquote>
+<p><strong>prerequisites</strong> : dictionary of components, optional</p>
+<blockquote class="last">
+<div><p>prerequisite component data this component has no prerequisites
+leave empty</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-obj docutils literal"><span class="pre">aaem.community_data</span></code></dt>
+<dd>community data module, see information on CommunityData Object</dd>
+<dt><code class="xref py py-obj docutils literal"><span class="pre">aaem.forecast</span></code></dt>
+<dd>forecast module, see information on Forecast Object</dd>
+<dt><code class="xref py py-obj docutils literal"><span class="pre">aaem.diagnostics</span></code></dt>
+<dd>diagnostics module, see information on diagnostics Object</dd>
+</dl>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>diagnostics</td>
+<td>(diagnostics) for tracking error/warning messages initial value: diag or new diagnostics object</td>
+</tr>
+<tr class="row-even"><td>forecast</td>
+<td>(forecast) community forecast for estimating future values initial value: forecast</td>
+</tr>
+<tr class="row-odd"><td>cd</td>
+<td>(dictionary) general data for a community. Initial value: &#8216;community&#8217; section of community_data</td>
+</tr>
+<tr class="row-even"><td>comp_specs</td>
+<td>(dictionary) component specific data for a community. Initial value: &#8216;Hydropower&#8217; section of community_data</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.calc_annual_electric_savings">
+<code class="descname">calc_annual_electric_savings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.calc_annual_electric_savings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.calc_annual_electric_savings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate annual electric savings created by the project.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="74%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>annual_electric_savings</td>
+<td>(np.array) electric savings ($/year) are the difference in the base</td>
+</tr>
+<tr class="row-even"><td>and proposed fuel costs</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.calc_annual_heating_savings">
+<code class="descname">calc_annual_heating_savings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.calc_annual_heating_savings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.calc_annual_heating_savings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate annual heating savings created by the project.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="39%" />
+<col width="61%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>annual_heating_savings</td>
+<td>(np.array) heating savings ($/year)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.calc_average_load">
+<code class="descname">calc_average_load</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.calc_average_load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.calc_average_load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the average load of the system.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="24%" />
+<col width="76%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>generation: float</td>
+<td>generation values in first year of project (kWh)</td>
+</tr>
+<tr class="row-even"><td>average_load: float</td>
+<td>average diesel generation load in first year of project (kW)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.calc_capital_costs">
+<code class="descname">calc_capital_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.calc_capital_costs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.calc_capital_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the capital costs.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>capital_costs</td>
+<td>(float) total cost of improvements ($), calculated from transmission and generation costs</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.calc_generation_proposed">
+<code class="descname">calc_generation_proposed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.calc_generation_proposed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.calc_generation_proposed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the proposed generation for Hydropower.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="35%" />
+<col width="65%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>load_offset_proposed</td>
+<td>(float) hydropower load offset (kW)</td>
+</tr>
+<tr class="row-even"><td>gross_generation_proposed</td>
+<td>(float) hydropower generation proposed (kWh/yr)</td>
+</tr>
+<tr class="row-odd"><td>net_generation_proposed</td>
+<td>(float) net hydropower generation(kWh/yr)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.calc_heat_recovery">
+<code class="descname">calc_heat_recovery</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.calc_heat_recovery"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.calc_heat_recovery" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate heat recovery values used by component.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="68%" />
+<col width="33%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>generation_diesel_reduction</td>
+<td>(float) (gal)</td>
+</tr>
+<tr class="row-even"><td>lost_heat_recovery</td>
+<td>(float) (gal)</td>
+</tr>
+<tr class="row-odd"><td>generation_diesel_reduction</td>
+<td>(float) (gal)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.get_fuel_total_saved">
+<code class="descname">get_fuel_total_saved</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.get_fuel_total_saved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.get_fuel_total_saved" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get total fuel saved.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>the total fuel saved in gallons</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.get_total_energy_produced">
+<code class="descname">get_total_energy_produced</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.get_total_energy_produced"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.get_total_energy_produced" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get total energy produced.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>the total energy produced</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.load_prerequisite_variables">
+<code class="descname">load_prerequisite_variables</code><span class="sig-paren">(</span><em>comps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.load_prerequisite_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.load_prerequisite_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads Non-residential buildings values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>comps: Dictionary of components</strong></p>
+<blockquote class="last">
+<div><p>Dictionary of components, needs &#8216;Non-residential Energy Efficiency&#8217;
+key</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="38%" />
+<col width="63%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>non_res_heating_consumption_proposed</td>
+<td>(float) the Non-residential Heating oil equiv. Consumed(gal)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>scalers={'capital costs': 1.0}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the component. The Annual Total Savings,Annual Costs,
+Annual Net Benefit, NPV Benefits, NPV Costs, NPV Net Benefits,
+Benefit Cost Ratio, Levelized Cost of Energy,
+and Internal Rate of Return will all be calculated. There must be a
+known Heat Recovery project for this component to run.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>scalers: dictionary of valid scalers, optional</strong></p>
+<blockquote class="last">
+<div><p>Scalers to adjust normal run variables.
+See note on accepted  scalers</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Accepted scalers: capital costs.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>run</td>
+<td>(bool) True in the component runs to completion, False otherwise</td>
+</tr>
+<tr class="row-even"><td>reason</td>
+<td>(string) lists reason for failure if run == False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.hydro.component.Hydropower.save_component_csv">
+<code class="descname">save_component_csv</code><span class="sig-paren">(</span><em>directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/component.html#Hydropower.save_component_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.component.Hydropower.save_component_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the component output csv in directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>directory</strong> : path</p>
+<blockquote class="last">
+<div><p>output directory</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-aaem.components.hydro.config"></span><div class="section" id="hydropower-configuration">
+<h2>Hydropower configuration<a class="headerlink" href="#hydropower-configuration" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><dl class="docutils">
+<dt>Contains configuration info for community data yaml file, and</dt>
+<dd>other set-up requirements</dd>
+</dl>
+</div></blockquote>
+</div>
+<span class="target" id="module-aaem.components.hydro.inputs"></span><div class="section" id="hydropower-inputs">
+<h2>Hydropower inputs<a class="headerlink" href="#hydropower-inputs" title="Permalink to this headline">¶</a></h2>
+<p>input functions for Hydropower component</p>
+<dl class="function">
+<dt id="aaem.components.hydro.inputs.load_project_details">
+<code class="descclassname">aaem.components.hydro.inputs.</code><code class="descname">load_project_details</code><span class="sig-paren">(</span><em>data_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#aaem.components.hydro.inputs.load_project_details" title="Permalink to this definition">¶</a></dt>
+<dd><p>load details related to exitign projects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_dir</strong> : path</p>
+<blockquote>
+<div><p>is a directory with  &#8216;project_development_timeframes.csv&#8217;,
+and &#8220;project_name_projects.yaml&#8221; in it</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict</p>
+<blockquote class="last">
+<div><p>has the keys &#8216;phase&#8217;(str), &#8216;proposed capacity&#8217;(float),
+&#8216;proposed generation&#8217;(float),&#8217;distance to resource&#8217;(float), 
+&#8216;generation capital cost&#8217;(float), &#8216;transmission capital cost&#8217;(float), 
+&#8216;operational costs&#8217;(float), &#8216;expected years to operation&#8217;(int),</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.hydro.inputs.process_data_import">
+<code class="descclassname">aaem.components.hydro.inputs.</code><code class="descname">process_data_import</code><span class="sig-paren">(</span><em>data_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#aaem.components.hydro.inputs.process_data_import" title="Permalink to this definition">¶</a></dt>
+<dd><p>does nothing</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_dir: path</strong></p>
+<blockquote class="last">
+<div><p>path to data directory for community</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<span class="target" id="module-aaem.components.hydro.outputs"></span><div class="section" id="hydropower-outputs">
+<h2>Hydropower outputs<a class="headerlink" href="#hydropower-outputs" title="Permalink to this headline">¶</a></h2>
+<p>output functions for Hydropower component</p>
+<dl class="function">
+<dt id="aaem.components.hydro.outputs.communities_summary">
+<code class="descclassname">aaem.components.hydro.outputs.</code><code class="descname">communities_summary</code><span class="sig-paren">(</span><em>coms</em>, <em>res_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/outputs.html#communities_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.outputs.communities_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the summary by: community hydropower_summary.csv</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>coms</strong> : dictionary</p>
+<blockquote>
+<div><p>results from the model, dictionary with each community or project 
+as key</p>
+</div></blockquote>
+<p><strong>res_dir</strong> :  path</p>
+<blockquote class="last">
+<div><p>location to save file</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.hydro.outputs.component_summary">
+<code class="descclassname">aaem.components.hydro.outputs.</code><code class="descname">component_summary</code><span class="sig-paren">(</span><em>results</em>, <em>res_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/outputs.html#component_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.outputs.component_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the regional and communities summary for the component in provided 
+directory</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>results</strong> : dictionary</p>
+<blockquote>
+<div><p>results from the model, dictionary with each community or project 
+as key</p>
+</div></blockquote>
+<p><strong>res_dir</strong> :  path</p>
+<blockquote class="last">
+<div><p>location to save file</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.hydro.outputs.create_regional_summary">
+<code class="descclassname">aaem.components.hydro.outputs.</code><code class="descname">create_regional_summary</code><span class="sig-paren">(</span><em>results</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/outputs.html#create_regional_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.outputs.create_regional_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the regional summary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>results</strong> : dictionary</p>
+<blockquote>
+<div><p>results from the model, dictionary with each community or project 
+as key</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DataFrame</p>
+<blockquote class="last">
+<div><p>containing regional results</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.hydro.outputs.save_regional_summary">
+<code class="descclassname">aaem.components.hydro.outputs.</code><code class="descname">save_regional_summary</code><span class="sig-paren">(</span><em>summary</em>, <em>res_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/outputs.html#save_regional_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.outputs.save_regional_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the summary by region:  __regional_hydropower_summary.csv</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>summary</strong> : DataFrame</p>
+<blockquote>
+<div><p>compiled regional results</p>
+</div></blockquote>
+<p><strong>res_dir</strong> :  path</p>
+<blockquote class="last">
+<div><p>location to save file</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<span class="target" id="module-aaem.components.hydro.preprocessing"></span><div class="section" id="hydropower-preprocessing">
+<h2>Hydropower preprocessing<a class="headerlink" href="#hydropower-preprocessing" title="Permalink to this headline">¶</a></h2>
+<p>preprocessing functions for Diesel Efficiency component</p>
+<dl class="function">
+<dt id="aaem.components.hydro.preprocessing.preprocess">
+<code class="descclassname">aaem.components.hydro.preprocessing.</code><code class="descname">preprocess</code><span class="sig-paren">(</span><em>preprocessor</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/hydro/preprocessing.html#preprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.hydro.preprocessing.preprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>preprocess data related to existing projects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>preprocessor: preprocessor.Preprocessor</strong></p>
+<blockquote>
+<div><p>a preprocessor object</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>project names</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Hydropower Component</a><ul>
+<li><a class="reference internal" href="#hydropower-configuration">Hydropower configuration</a></li>
+<li><a class="reference internal" href="#hydropower-inputs">Hydropower inputs</a></li>
+<li><a class="reference internal" href="#hydropower-outputs">Hydropower outputs</a></li>
+<li><a class="reference internal" href="#hydropower-preprocessing">Hydropower preprocessing</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="aaem.components.html">Model Components</a><ul>
+      <li>Previous: <a href="aaem.components.heat_recovery.html" title="previous chapter">Heat Recovery Component</a></li>
+      <li>Next: <a href="aaem.components.non_residential.html" title="next chapter">Non-residential Efficiency Component</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

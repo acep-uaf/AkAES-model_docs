@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.heat_recovery.preprocessing &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.heat_recovery.preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Heat Recovery preprocessing </span>
+<span class="sd">---------------------------</span>
+
+<span class="sd">preprocessing functions for Heat Recovery component  </span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">read_csv</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">yaml</span> <span class="k">import</span> <span class="n">dump</span>
+
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">UNKNOWN</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+
+
+<div class="viewcode-block" id="preprocess"><a class="viewcode-back" href="../../../../aaem.components.heat_recovery.html#aaem.components.heat_recovery.preprocessing.preprocess">[docs]</a><span class="k">def</span> <span class="nf">preprocess</span> <span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;preprocess data related to existing projects</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    preprocessor: preprocessor.Preprocessor</span>
+<span class="sd">        a preprocessor object</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        project names</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#~ data = read_csv(</span>
+        <span class="c1">#~ os.path.join(ppo.data_dir,&quot;heat_recovery_projects_potential.csv&quot;), </span>
+        <span class="c1">#~ comment = &#39;#&#39;,</span>
+        <span class="c1">#~ index_col = 0</span>
+    <span class="c1">#~ )</span>
+    <span class="c1">#~ ids = [preprocessor.communities[0], preprocessor.aliases[0]]</span>
+    <span class="c1">#~ if preprocessor.intertie_status == &#39;child&#39;:</span>
+        <span class="c1">#~ ids = [preprocessor.communities[1], preprocessor.aliases[1]]</span>
+                                        
+    <span class="c1">#~ data = data.ix[ids][data.ix[ids].isnull().all(1) == False]</span>
+
+    <span class="c1">#~ data_cols_in = [&#39;HR Functioning as of November 2016 (Yes/No)&#39;,</span>
+                    <span class="c1">#~ &#39;Identified as priority by HR working group&#39;,</span>
+                 <span class="c1">#~ &#39;Est. current annual heating fuel gallons displaced&#39;,</span>
+                 <span class="c1">#~ &#39;Proposed Gallons of Diesel Offset&#39;]</span>
+    <span class="c1">#~ data =  data[data_cols_in]</span>
+    <span class="c1">#~ data.columns = data_cols</span>
+    <span class="c1">#~ data = []</span>
+    <span class="c1"># if no data add defaults</span>
+    <span class="c1">#~ if len(data) == 0:</span>
+        <span class="c1">#~ data = DataFrame([[&#39;No&#39;,&#39;No&#39;, np.nan, np.nan],],columns = data_cols)</span>
+    
+    <span class="c1">#~ # if multiple data rows assume first is best</span>
+    <span class="c1">#~ if len(data) &gt; 1:</span>
+        <span class="c1">#~ data = data.iloc[0]</span>
+
+    <span class="n">base</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;Heat Recovery&#39;</span> <span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s1">&#39;lifetime&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="c1"># number years &lt;int&gt;</span>
+            <span class="s1">&#39;start year&#39;</span><span class="p">:</span> <span class="mi">2016</span><span class="p">,</span> <span class="c1"># start year &lt;int&gt;</span>
+            
+            
+            <span class="s1">&#39;est. current annual heating fuel gallons displaced&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            
+            <span class="s1">&#39;estimate pipe distance&#39;</span><span class="p">:</span> <span class="mi">1500</span><span class="p">,</span>
+            <span class="s1">&#39;estimate pipe cost/ft&#39;</span><span class="p">:</span> <span class="mi">135</span><span class="p">,</span>
+            <span class="s1">&#39;estimate buildings to heat&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="s1">&#39;heating conversion efficiency&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
+            <span class="s1">&#39;percent heat recovered&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="s1">&#39;estimate cost/building&#39;</span><span class="p">:</span> <span class="mi">40000</span><span class="p">,</span>
+            <span class="s1">&#39;o&amp;m per year&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+            
+            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            <span class="s1">&#39;phase&#39;</span><span class="p">:</span> <span class="s1">&#39;Reconnaissance&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;identified as priority&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            <span class="s1">&#39;project type&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            <span class="s1">&#39;capital costs&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            <span class="s1">&#39;number buildings&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            <span class="s1">&#39;buildings&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;total feet piping needed&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            <span class="s1">&#39;proposed maximum btu/hr&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            <span class="s1">&#39;proposed gallons diesel offset&#39;</span><span class="p">:</span> <span class="n">UNKNOWN</span><span class="p">,</span>
+            <span class="s1">&#39;link&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;notes&#39;</span><span class="p">:</span> <span class="s1">&#39;none&#39;</span><span class="p">,</span>
+            
+            
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">process_intertie</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">base</span>
+    <span class="n">p_data</span> <span class="o">=</span> <span class="p">{}</span>
+ 
+    <span class="n">proj_cols</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;Project Name&#39;</span><span class="p">,</span> <span class="s1">&#39;Year of Feasibility Study Completion&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;Phase Completed&#39;</span><span class="p">,</span> <span class="s1">&#39;New/Repair/Extension&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Total Round-trip Distance of Piping (feet)&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;Number of Buildings/Facilities&#39;</span><span class="p">,</span> <span class="s1">&#39;Buildings/Facilities to be Served&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Proposed Gallons of Diesel Offset&#39;</span><span class="p">,</span> <span class="s1">&#39;Proposed Maximum Btu/hr&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Total CAPEX&#39;</span><span class="p">,</span> <span class="s1">&#39;Source&#39;</span><span class="p">,</span> <span class="s1">&#39;Link&#39;</span><span class="p">,</span> <span class="s1">&#39;Notes&#39;</span><span class="p">,</span> 
+        <span class="s1">&#39;Est. current annual heating fuel gallons displaced&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Identified as priority by HR working group&#39;</span>
+        <span class="p">]</span>
+    <span class="n">project_data</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span> 
+            <span class="s2">&quot;heat_recovery_projects_potential.csv&quot;</span>
+        <span class="p">),</span>
+        <span class="n">comment</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span>
+        <span class="n">index_col</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="p">)[</span><span class="n">proj_cols</span><span class="p">]</span>
+    
+    
+        
+    <span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
+        <span class="s1">&#39;project_development_timeframes.csv&#39;</span>
+    <span class="p">)</span>
+    <span class="n">timeframes</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span>
+                    <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">]</span>
+    
+    
+    <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">communities</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">aliases</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">intertie_status</span> <span class="o">==</span> <span class="s1">&#39;child&#39;</span><span class="p">:</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">communities</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">aliases</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+    
+    <span class="n">current</span> <span class="o">=</span> \
+        <span class="n">project_data</span><span class="p">[</span><span class="s1">&#39;Est. current annual heating fuel gallons displaced&#39;</span><span class="p">]</span>\
+        <span class="p">[</span><span class="n">project_data</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">]</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">]</span>\
+            <span class="p">[</span><span class="s1">&#39;est. current annual heating fuel gallons displaced&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">pass</span>
+        
+    
+    <span class="k">del</span> <span class="n">project_data</span><span class="p">[</span><span class="s1">&#39;Est. current annual heating fuel gallons displaced&#39;</span><span class="p">]</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">project_data</span> <span class="o">=</span> <span class="n">project_data</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span>
+        <span class="c1">#~ print project_data</span>
+        <span class="n">project_data</span> <span class="o">=</span> \
+            <span class="n">project_data</span><span class="p">[</span><span class="n">project_data</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">project_data</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="p">:</span>
+            <span class="n">project_data</span> <span class="o">=</span> <span class="n">project_data</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1">#~ print e</span>
+        <span class="n">project_data</span> <span class="o">=</span> <span class="p">[]</span>
+        
+    
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">project_data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> \
+        <span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">project_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Project Name&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">base</span>
+
+    <span class="k">for</span> <span class="n">p_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">project_data</span><span class="p">)):</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="n">project_data</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">p_idx</span><span class="p">]</span>
+        <span class="n">p_name</span> <span class="o">=</span> <span class="s1">&#39;heat_recovery+project_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">p_idx</span><span class="p">)</span>
+        
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Project Name&#39;</span><span class="p">])</span>
+        
+        <span class="n">priority</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Identified as priority by HR working group&#39;</span><span class="p">])</span> 
+        <span class="n">phase</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Phase Completed&#39;</span><span class="p">])</span>
+        <span class="n">phase</span> <span class="o">=</span> <span class="n">phase</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="n">phase</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">project_type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;New/Repair/Extension&#39;</span><span class="p">])</span>
+        <span class="n">total_piping_needed</span> <span class="o">=</span> \
+            <span class="nb">float</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Total Round-trip Distance of Piping (feet)&#39;</span><span class="p">])</span>
+        <span class="n">num_buildings</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Number of Buildings/Facilities&#39;</span><span class="p">]</span> <span class="p">)</span>
+        <span class="n">buildings</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Buildings/Facilities to be Served&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        
+        <span class="n">diesel_offset</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Proposed Gallons of Diesel Offset&#39;</span><span class="p">])</span>
+        <span class="n">max_btu_per_hr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Proposed Maximum Btu/hr&#39;</span><span class="p">])</span>
+        <span class="n">capex</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Total CAPEX&#39;</span><span class="p">])</span>
+        <span class="c1">#~ print capex</span>
+        <span class="c1">#~ expected_years_to_operation = UNKNOWN</span>
+        <span class="k">if</span> <span class="n">phase</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
+            <span class="n">preprocessor</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span>
+                <span class="s1">&#39;Heat Recovery&#39;</span><span class="p">,</span> 
+                <span class="s1">&#39;phase &quot;0&quot; corrected to Reconnaissance&#39;</span>
+            <span class="p">)</span>
+            <span class="n">phase</span> <span class="o">=</span> <span class="s2">&quot;Reconnaissance&quot;</span>
+            
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">yto</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">timeframes</span><span class="p">[</span><span class="n">phase</span><span class="p">])))</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+            <span class="n">yto</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="n">start_year</span> <span class="o">=</span> <span class="n">preprocessor</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;community&#39;</span><span class="p">][</span><span class="s1">&#39;current year&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">yto</span>
+
+        <span class="n">project</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;start year&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">start_year</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">name</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;phase&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">phase</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;identified as priority&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">priority</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;project type&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">project_type</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;capital costs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">capex</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;total feet piping needed&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">total_piping_needed</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;number buildings&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">num_buildings</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;buildings&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">buildings</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;proposed gallons diesel offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">diesel_offset</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;proposed maximum btu/hr&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">max_btu_per_hr</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;link&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Link&#39;</span><span class="p">]</span>
+        <span class="n">project</span><span class="p">[</span><span class="s1">&#39;Heat Recovery&#39;</span><span class="p">][</span><span class="s1">&#39;notes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cp</span><span class="p">[</span><span class="s1">&#39;Notes&#39;</span><span class="p">]</span>
+
+        <span class="c1">#~ print project </span>
+        <span class="n">p_data</span><span class="p">[</span><span class="n">p_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">project</span>  
+
+    
+    <span class="n">p_data</span><span class="p">[</span><span class="s1">&#39;no project&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span>
+
+    <span class="k">return</span> <span class="n">p_data</span></div>
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

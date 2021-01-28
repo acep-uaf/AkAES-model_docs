@@ -1,0 +1,369 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Command Line Interface (CLI) Commands &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="index.html" />
+    <link rel="up" title="Instructions" href="instructions.html" />
+    <link rel="next" title="Running AAEM from a script" href="scripts.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="command-line-interface-cli-commands">
+<span id="cli"></span><h1>Command Line Interface (CLI) Commands<a class="headerlink" href="#command-line-interface-cli-commands" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="general">
+<h2>General<a class="headerlink" href="#general" title="Permalink to this headline">¶</a></h2>
+<p>Here is a description of the Commands for the Alaska Affordable Energy Model (AAEM) Command Line Interface (CLI). The CLI can be accessed by calling aaem.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem
+</pre></div>
+</div>
+<p>This will display usage info, a list of commands, and options. The commands are used to perform a specific model function. Each command has it’s own subsection below.  The options listed here are general options and will be applied to any command called.</p>
+<dl class="docutils">
+<dt>General options:</dt>
+<dd><ul class="first last simple">
+<li>time (&#8211;time, -t ): will display the time elapsed for running a command</li>
+<li>warn (&#8211;warn, -w): show warnings</li>
+</ul>
+</dd>
+</dl>
+<p>The format of all all cli commands is. (optional info) &lt;required info&gt;</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem <span class="o">(</span>general options<span class="o">)</span> &lt;command&gt; <span class="o">(</span>options<span class="o">)</span> <span class="o">(</span>arguments<span class="o">)</span>
+</pre></div>
+</div>
+<p>For example, the run command:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem -t run -f Adak_Example.yaml
+</pre></div>
+</div>
+</div>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<p>The setup command can be used to quickly set up the structure needed to run the model and perform an initial model run using default settings.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem setup &lt;path to create model directory at&gt; &lt;path to AAEM data repo&gt;
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><ul class="first last simple">
+<li>Dev (&#8211;dev, -d): use only the development communities</li>
+<li>Force (&#8211;force, -f): force overwriting of existing directories</li>
+</ul>
+</dd>
+</dl>
+<p>Example, with dev flag:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem setup -d ./model ./alaska_affordable_energy_model-data
+</pre></div>
+</div>
+</div>
+<div class="section" id="refresh">
+<h2>Refresh<a class="headerlink" href="#refresh" title="Permalink to this headline">¶</a></h2>
+<p>regenerate(or generate) the model directory structure needed for running the model using the data in the data repo. Use a tag to name the output directory</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem refresh &lt;path to <span class="o">(</span>create<span class="o">)</span> model directory&gt; &lt;path to AAEM data repo&gt; <span class="o">(</span>tag<span class="o">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><ul class="first last simple">
+<li>Dev (&#8211;dev, -d): use only the development communities</li>
+<li>Force (&#8211;force, -f): force overwriting of existing directories</li>
+<li>Make Globals (&#8211;make_globals, -g): splits the configurations generated into a global file and community files</li>
+</ul>
+</dd>
+</dl>
+<p>Example, tagged:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem refresh ./ ./alaska_affordable_energy_model-data model
+</pre></div>
+</div>
+</div>
+<div class="section" id="get-data">
+<h2>Get Data<a class="headerlink" href="#get-data" title="Permalink to this headline">¶</a></h2>
+<p>The Get Data command creates a directory of data files that the AAEM preprocessor needs to run, by pulling data from the API when available, and defaulting to files in the AAEM-data otherwise.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem get-data &lt;path to AAEM data repo&gt; &lt;path to create new data directory at&gt;
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><ul class="first last simple">
+<li>Force (&#8211;force, -f): force overwriting of existing directories</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem get-data ./alaska_affordable_energy_model-data ./my-new-AAEM-data
+</pre></div>
+</div>
+</div>
+<div class="section" id="run">
+<h2>Run<a class="headerlink" href="#run" title="Permalink to this headline">¶</a></h2>
+<p>Run the AAEM. Requires that the directory with the model info is set up with the structure that the setup or refresh command will provide.
+The model may also be run from a script file see <a class="reference internal" href="scripts.html#scripts"><span class="std std-ref">Running AAEM from a script</span></a>.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem run &lt;path to model directory or script file&gt; <span class="o">(</span>list of communities<span class="o">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><ul class="first simple">
+<li>Dev (&#8211;dev, -d): use only the development communities</li>
+<li>Force (&#8211;force, -f): force overwriting of existing directories</li>
+<li>Log (&#8211;log, -l): name/ path of a file to log the output from command to</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Use &#8211;log &lt;log_file&gt;</li>
+<li>Example: &#8211;log OUTPUT.txt</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Tag (&#8211;tag, -t): tag for results directory</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>use : -t &lt;tag&gt;</li>
+<li>Ex: -t cool_example_results</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Scalers (&#8211;scalers, -s): scalers to be used in running model</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>Available scalers:</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li>diesel price</li>
+<li>diesel price adder</li>
+<li>capital costs</li>
+<li>kWh consumption</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Use: -s &lt;scalar string&gt;</li>
+</ul>
+</div></blockquote>
+<ul class="last simple">
+<li>Ex: -s &#8216;{capital costs:1.1, diesel price:10}&#8217;</li>
+</ul>
+</dd>
+<dt>Options (Removed in 0.27.0, should work in verions prior to that):</dt>
+<dd><ul class="first simple">
+<li>Plot (&#8211;plot, -p): run the plotting functions and save results to the provided directory</li>
+</ul>
+<blockquote class="last">
+<div><ul class="simple">
+<li>Use: &#8211;plot &lt;directory&gt;</li>
+<li>Ex: -p ./model/PLOTS</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+<p>Example, with timing:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem -t run ./model
+</pre></div>
+</div>
+<p>Example, list of communities:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem run ./model Adak Bethel <span class="s1">&#39;Manley Hot Springs&#39;</span>
+</pre></div>
+</div>
+<p>Example, all projects for a given community:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem run ./model Adak*
+</pre></div>
+</div>
+<p>Example, list of communities, force:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem run -f ./model Adak Bethel <span class="s1">&#39;Manley Hot Springs&#39;</span>
+</pre></div>
+</div>
+<p>Example, script (see <a class="reference internal" href="scripts.html#scripts"><span class="std std-ref">Running AAEM from a script</span></a> for more details):</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem run script_file.yaml
+</pre></div>
+</div>
+<p>Example, scalers:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem run -s <span class="s1">&#39;{diesel price:10}&#39;</span> ./model
+</pre></div>
+</div>
+</div>
+<div class="section" id="summaries">
+<h2>Summaries<a class="headerlink" href="#summaries" title="Permalink to this headline">¶</a></h2>
+<p>Creates the html summaries for model results</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem summaries &lt;path to model&gt; <span class="o">(</span>tag<span class="o">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><ul class="first last simple">
+<li>Alternate output path (&#8211;alt_out, -a): Alternate output path</li>
+<li>Force (&#8211;force, -f): force overwriting of existing directories</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem summaries model/m0.27.0_d0.27.0
+</pre></div>
+</div>
+<p>Example, with tag:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem summaries model/m0.27.0_d0.27.0 test_tag
+</pre></div>
+</div>
+</div>
+<div class="section" id="compare">
+<h2>Compare<a class="headerlink" href="#compare" title="Permalink to this headline">¶</a></h2>
+<p>Compare results between model runs.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem compare &lt;one <span class="nb">set</span> of results&gt; &lt;another <span class="nb">set</span> of results&gt; <span class="o">(</span>list of coms<span class="o">)</span>
+</pre></div>
+</div>
+<p>Example, for all:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem compare ./model/results_A ./model/results_B
+</pre></div>
+</div>
+<p>Example, for Adak:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem compare ./model/results_A ./model/results_B Adak
+</pre></div>
+</div>
+</div>
+<div class="section" id="list">
+<h2>List<a class="headerlink" href="#list" title="Permalink to this headline">¶</a></h2>
+<p>List communities and projects that can be run</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem list &lt;model directory&gt;
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem list ./model
+</pre></div>
+</div>
+</div>
+<div class="section" id="copy">
+<h2>Copy<a class="headerlink" href="#copy" title="Permalink to this headline">¶</a></h2>
+<p>Copy model structure from one place to another</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem copy &lt;source&gt; &lt;destination&gt;
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Options:</dt>
+<dd><ul class="first last simple">
+<li>Force (&#8211;force, -f): force overwriting of existing directories</li>
+</ul>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem copy ./model ./model__COPY
+</pre></div>
+</div>
+</div>
+<div class="section" id="help">
+<h2>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h2>
+<p>Display help for a provided command, or list available commands</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem <span class="nb">help</span> <span class="o">(</span><span class="nb">command</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>Example, with command :</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem <span class="nb">help</span> run
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Command Line Interface (CLI) Commands</a><ul>
+<li><a class="reference internal" href="#general">General</a></li>
+<li><a class="reference internal" href="#setup">Setup</a></li>
+<li><a class="reference internal" href="#refresh">Refresh</a></li>
+<li><a class="reference internal" href="#get-data">Get Data</a></li>
+<li><a class="reference internal" href="#run">Run</a></li>
+<li><a class="reference internal" href="#summaries">Summaries</a></li>
+<li><a class="reference internal" href="#compare">Compare</a></li>
+<li><a class="reference internal" href="#list">List</a></li>
+<li><a class="reference internal" href="#copy">Copy</a></li>
+<li><a class="reference internal" href="#help">Help</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="instructions.html">Instructions</a><ul>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation</a></li>
+      <li>Next: <a href="scripts.html" title="next chapter">Running AAEM from a script</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

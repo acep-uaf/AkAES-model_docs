@@ -1,0 +1,507 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.solar_power.component &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.solar_power.component</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Solar Power component body</span>
+<span class="sd">--------------------------</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">aaem.components.annual_savings</span> <span class="k">import</span> <span class="n">AnnualSavings</span>
+<span class="kn">from</span> <span class="nn">aaem.community_data</span> <span class="k">import</span> <span class="n">CommunityData</span>
+<span class="kn">from</span> <span class="nn">aaem.forecast</span> <span class="k">import</span> <span class="n">Forecast</span>
+<span class="kn">from</span> <span class="nn">aaem.diagnostics</span> <span class="k">import</span> <span class="n">Diagnostics</span>
+<span class="kn">import</span> <span class="nn">aaem.constants</span> <span class="k">as</span> <span class="nn">constants</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">COMPONENT_NAME</span><span class="p">,</span> <span class="n">UNKNOWN</span>
+
+<div class="viewcode-block" id="SolarPower"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower">[docs]</a><span class="k">class</span> <span class="nc">SolarPower</span> <span class="p">(</span><span class="n">AnnualSavings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Solar power component of the Alaska Affordable Energy Model: This module</span>
+<span class="sd">    estimates the potential reduction in diesel fuel use from installation or</span>
+<span class="sd">    improvement of photovoltaic (PV) solar generation systems. Proposed solar</span>
+<span class="sd">    generation is based on an estimated capacity per community. Costs associated</span>
+<span class="sd">    with the installation of panels and necessary power-house improvements</span>
+<span class="sd">    are also estimated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    community_data : CommunityData</span>
+<span class="sd">        CommunityData Object for a community</span>
+<span class="sd">    forecast : Forecast</span>
+<span class="sd">        forecast for a community</span>
+<span class="sd">    diagnostics : diagnostics, optional</span>
+<span class="sd">        diagnostics for tracking error/warning messages</span>
+<span class="sd">    prerequisites : dictionary of components, optional</span>
+<span class="sd">        prerequisite component data this component has no prerequisites</span>
+<span class="sd">        leave empty</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    diagnostics : diagnostics</span>
+<span class="sd">        for tracking error/warning messages</span>
+<span class="sd">        initial value: diag or new diagnostics object</span>
+<span class="sd">    forecast : forecast</span>
+<span class="sd">        community forecast for estimating future values</span>
+<span class="sd">        initial value: forecast</span>
+<span class="sd">    cd : dictionary</span>
+<span class="sd">        general data for a community.</span>
+<span class="sd">        Initial value: &#39;community&#39; section of community_data</span>
+<span class="sd">    comp_specs : dictionary</span>
+<span class="sd">        component specific data for a community.</span>
+<span class="sd">        Initial value: &#39;Solar Power&#39; section of community_data</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    aaem.community_data :</span>
+<span class="sd">        community data module, see information on CommunityData Object</span>
+<span class="sd">    aaem.forecast :</span>
+<span class="sd">        forecast module, see information on Forecast Object</span>
+<span class="sd">    aaem.diagnostics :</span>
+<span class="sd">        diagnostics module, see information on diagnostics Object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community_data</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span>
+                        <span class="n">diag</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prerequisites</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Class initialiser.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        community_data : CommunityData</span>
+<span class="sd">            CommunityData Object for a community</span>
+<span class="sd">        forecast : Forecast</span>
+<span class="sd">            forecast for a community</span>
+<span class="sd">        diagnostics : diagnostics, optional</span>
+<span class="sd">            diagnostics for tracking error/warning messages</span>
+<span class="sd">        prerequisites : dictionary of components, optional</span>
+<span class="sd">            prerequisite component data</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">=</span> <span class="n">diag</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">=</span> <span class="n">diagnostics</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span> <span class="o">=</span> <span class="n">forecast</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cd</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="s1">&#39;community&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">COMPONENT_NAME</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span> <span class="o">=</span> <span class="n">COMPONENT_NAME</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_project_life_details</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;start year&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;lifetime&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1">### ADD other initialization stuff</span>
+
+
+<div class="viewcode-block" id="SolarPower.run"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;capital costs&#39;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">}):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the component. The Annual Total Savings,Annual Costs,</span>
+<span class="sd">        Annual Net Benefit, NPV Benefits, NPV Costs, NPV Net Benefits,</span>
+<span class="sd">        Benefit Cost Ratio, Levelized Cost of Energy,</span>
+<span class="sd">        and Internal Rate of Return will all be calculated. There must be a</span>
+<span class="sd">        known Heat Recovery project for this component to run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scalers: dictionary of valid scalers, optional</span>
+<span class="sd">            Scalers to adjust normal run variables.</span>
+<span class="sd">            See note on accepted  scalers</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run : bool</span>
+<span class="sd">            True in the component runs to completion, False otherwise</span>
+<span class="sd">        reason : string</span>
+<span class="sd">            lists reason for failure if run == False</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">            Accepted scalers: capital costs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span>
+
+
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;file id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">tag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;solar&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Not a solar project.&quot;</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_average_load</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_proposed_generation</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_warning</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+            <span class="s2">&quot;could not be run&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Could not calculate average load,&quot;</span> <span class="o">+</span> \
+                            <span class="s2">&quot; or proposed generation.&quot;</span>
+
+            <span class="k">return</span>
+
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;average load limit&#39;</span><span class="p">]</span> <span class="ow">or</span> \
+           <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposed_load</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+            <span class="s2">&quot;model did not meet minimum generation requirements&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1">#~ print self.proposed_load, self.average_load, self.comp_specs[&#39;average load limit&#39;]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;average load limit&#39;</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Average load too small for viable solar power.&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Proposed load was less than 0.&quot;</span>
+            <span class="k">return</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_generation_fuel_used</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_fuel_displaced</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model financial&quot;</span><span class="p">]:</span>
+            <span class="c1"># AnnualSavings functions (don&#39;t need to write)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_diesel_prices</span><span class="p">()</span>
+
+            <span class="c1"># change these below</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_capital_costs</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_maintenance_cost</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_electric_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_heating_savings</span><span class="p">()</span>
+
+            <span class="c1"># AnnualSavings functions (don&#39;t need to write)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_total_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;interest rate&#39;</span><span class="p">],</span>
+                                            <span class="n">scalers</span><span class="p">[</span><span class="s1">&#39;capital costs&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_net_benefit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_npv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;discount rate&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;current year&quot;</span><span class="p">])</span>
+
+
+            <span class="c1">#~ print self.get_NPV_benefits()</span>
+            <span class="c1">#~ print self.get_NPV_costs()</span>
+            <span class="c1">#~ print self.get_NPV_net_benefit()</span>
+            <span class="c1">#~ print self.get_BC_ratio()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_levelized_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SolarPower.calc_average_load"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.calc_average_load">[docs]</a>    <span class="k">def</span> <span class="nf">calc_average_load</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the Average Diesel load of the current system</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        average_load : float</span>
+<span class="sd">            average diesel load of current system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#~ self.generation = self.forecast.get_generation(self.start_year)</span>
+        <span class="c1">#~ self.generation = \</span>
+            <span class="c1">#~ self.forecast.generation_by_type[&#39;generation diesel&#39;]\</span>
+            <span class="c1">#~ [self.start_year]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span><span class="o">.</span><span class="n">yearly_average_diesel_load</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_year</span><span class="p">]</span></div>
+        <span class="c1">#~ print self.average_load</span>
+
+<div class="viewcode-block" id="SolarPower.calc_proposed_generation"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.calc_proposed_generation">[docs]</a>    <span class="k">def</span> <span class="nf">calc_proposed_generation</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the proposed generation for Solar Power.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Proposed Load: float</span>
+<span class="sd">             Proposed solar power load (kW)</span>
+<span class="sd">        generation_proposed : float</span>
+<span class="sd">            Proposed solar power generation (kWh/yr)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_load</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">*</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;percent generation to offset&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span>
+        <span class="c1">#~ print self.proposed_load</span>
+        <span class="n">existing_RE</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;solar capacity&#39;</span><span class="p">]</span> <span class="o">+</span> \
+                      <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;wind capacity&#39;</span><span class="p">]</span>
+        <span class="c1">#~ print existing_RE, self.comp_specs[&#39;data&#39;][&#39;Installed Capacity&#39;], self.comp_specs[&#39;data&#39;][&#39;Wind Capacity&#39;]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_load</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proposed_load</span> <span class="o">-</span> <span class="n">existing_RE</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1">#~ self.total_load = self.proposed_load + \</span>
+                        <span class="c1">#~ self.comp_specs[&#39;data&#39;][&#39;Installed Capacity&#39;]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation_proposed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposed_load</span> <span class="o">*</span>\
+                        <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;output per 10kW solar PV&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">10.0</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation_proposed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_proposed</span> <span class="o">*</span>\
+            <span class="p">((</span><span class="mi">100</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;percent solar degradation&#39;</span><span class="p">])</span><span class="o">/</span><span class="mf">100.0</span><span class="p">)</span><span class="o">**</span>\
+            <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_life</span><span class="p">)</span></div>
+        <span class="c1">#~ print &#39;self.calc_proposed_generation&#39;</span>
+        <span class="c1">#~ print self.proposed_load</span>
+        <span class="c1">#~ print self.generation_proposed</span>
+
+<div class="viewcode-block" id="SolarPower.calc_generation_fuel_used"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.calc_generation_fuel_used">[docs]</a>    <span class="k">def</span> <span class="nf">calc_generation_fuel_used</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gen_eff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;diesel generation efficiency&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation_fuel_used</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_proposed</span><span class="o">/</span><span class="n">gen_eff</span></div>
+
+<div class="viewcode-block" id="SolarPower.calc_fuel_displaced"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.calc_fuel_displaced">[docs]</a>    <span class="k">def</span> <span class="nf">calc_fuel_displaced</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate fuel displaced by solar power.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fuel_displaced : float</span>
+<span class="sd">            fuel displaced by solar power (gal)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gen_eff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;diesel generation efficiency&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;heat recovery operational&#39;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fuel_displaced</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_proposed</span><span class="o">/</span><span class="n">gen_eff</span> <span class="o">*</span> <span class="o">.</span><span class="mi">15</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fuel_displaced</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_proposed</span> <span class="o">*</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="SolarPower.calc_maintenance_cost"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.calc_maintenance_cost">[docs]</a>    <span class="k">def</span> <span class="nf">calc_maintenance_cost</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate Maintenance costs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        maintenance_cost : float</span>
+<span class="sd">            maintenance cost as a percentage of the capital costs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">*</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;percent o&amp;m&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">100.0</span><span class="p">)</span></div>
+        <span class="c1">#~ print &quot;self.calc_maintenance_cost&quot;</span>
+        <span class="c1">#~ print self.maintenance_cost</span>
+
+<div class="viewcode-block" id="SolarPower.calc_capital_costs"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.calc_capital_costs">[docs]</a>    <span class="k">def</span> <span class="nf">calc_capital_costs</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the capital costs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        capital_costs : float</span>
+<span class="sd">             total cost of improvements ($), calculated from transmission and</span>
+<span class="sd">             generation costs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">component_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;cost&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">component_cost</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;UNKNOWN&#39;</span><span class="p">:</span>
+            <span class="n">component_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposed_load</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;cost per kW&#39;</span><span class="p">]</span>
+
+        <span class="n">powerhouse_cost</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;switchgear suitable for renewables&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;switch gear needed for solar&#39;</span><span class="p">]:</span>
+            <span class="n">powerhouse_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;switchgear cost&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">=</span> <span class="n">powerhouse_cost</span> <span class="o">+</span> <span class="n">component_cost</span></div>
+        <span class="c1">#~ print &#39;self.calc_capital_costs&#39;</span>
+        <span class="c1">#~ print self.capital_costs</span>
+
+
+<div class="viewcode-block" id="SolarPower.calc_annual_electric_savings"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.calc_annual_electric_savings">[docs]</a>    <span class="k">def</span> <span class="nf">calc_annual_electric_savings</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate annual electric savings created by the project.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        annual_electric_savings : np.array</span>
+<span class="sd">            electric savings ($/year) are the difference in the base</span>
+<span class="sd">        and proposed fuel costs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span>
+
+        <span class="n">price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diesel_prices</span>
+        <span class="c1"># fuel cost + maintenance cost</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_generation_cost</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation_fuel_used</span> <span class="o">*</span> <span class="n">price</span><span class="p">)</span><span class="c1"># +\</span>
+                <span class="c1">#~ (self.generation_proposed * self.comp_specs[&#39;o&amp;m cost per kWh&#39;])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">annual_electric_savings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_generation_cost</span> <span class="o">-</span> \
+                                       <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_cost</span></div>
+
+        <span class="c1">#~ print self.baseline_generation_cost</span>
+        <span class="c1">#~ print self.proposed_generation_cost</span>
+        <span class="c1">#~ print self.annual_electric_savings</span>
+
+
+    <span class="c1"># Make this do stuff. Remember the different fuel type prices if using</span>
+<div class="viewcode-block" id="SolarPower.calc_annual_heating_savings"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.calc_annual_heating_savings">[docs]</a>    <span class="k">def</span> <span class="nf">calc_annual_heating_savings</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate annual heating savings created by the project.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        annual_heating_savings : np.array</span>
+<span class="sd">            heating savings ($/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diesel_prices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;heating fuel premium&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annual_heating_savings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fuel_displaced</span> <span class="o">*</span> <span class="n">price</span></div>
+        <span class="c1">#~ print self.fuel_displaced</span>
+        <span class="c1">#~ print self.annual_heating_savings</span>
+
+<div class="viewcode-block" id="SolarPower.get_fuel_total_saved"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.get_fuel_total_saved">[docs]</a>    <span class="k">def</span> <span class="nf">get_fuel_total_saved</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get total fuel saved.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            the total fuel saved in gallons</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_gen_fuel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_fuel_used</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span>
+        <span class="n">post_gen_fuel</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">base_gen_fuel</span> <span class="o">-</span> <span class="n">post_gen_fuel</span><span class="p">)</span> <span class="o">+</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fuel_displaced</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SolarPower.get_total_energy_produced"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.get_total_energy_produced">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_energy_produced</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get total energy produced.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            the total energy produced</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_proposed</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">gen</span></div>
+
+<div class="viewcode-block" id="SolarPower.save_component_csv"><a class="viewcode-back" href="../../../../aaem.components.solar_power.html#aaem.components.solar_power.component.SolarPower.save_component_csv">[docs]</a>    <span class="k">def</span> <span class="nf">save_component_csv</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the component output csv in directory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        directory : path</span>
+<span class="sd">            output directory</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span><span class="p">:</span>
+            <span class="c1">#~ fname = os.path.join(directory,</span>
+                                   <span class="c1">#~ self.component_name + &quot;_output.csv&quot;)</span>
+            <span class="c1">#~ fname = fname.replace(&quot; &quot;,&quot;_&quot;)</span>
+
+            <span class="c1">#~ fd = open(fname, &#39;w&#39;)</span>
+            <span class="c1">#~ fd.write(&quot;Wind Power minimum requirements not met\n&quot;)</span>
+            <span class="c1">#~ fd.close()</span>
+            <span class="k">return</span>
+
+
+        <span class="n">years</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_life</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_year</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">({</span>
+                <span class="s1">&#39;Solar: Capacity (kW)&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposed_load</span><span class="p">,</span>
+                <span class="s2">&quot;Solar: Generation (kWh/year)&quot;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">generation_proposed</span><span class="p">,</span>
+                <span class="s1">&#39;Solar: Utility Diesel Displaced (gallons/year)&#39;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">generation_fuel_used</span><span class="p">,</span>
+                <span class="s1">&#39;Solar: Heating Fuel Displaced (gallons/year)&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">fuel_displaced</span><span class="p">,</span>
+                <span class="s2">&quot;Solar: Heat Recovery Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">get_heating_savings_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Solar: Electricity Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">get_electric_savings_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Solar: Project Capital Cost ($/year)&quot;</span><span class="p">:</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">get_capital_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Solar: Total Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">get_total_savings_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Solar: Net Benefit ($/year)&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_net_benefit</span><span class="p">(),</span>
+                       <span class="p">},</span> <span class="n">years</span><span class="p">)</span>
+
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Community&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+
+        <span class="n">ol</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Community&quot;</span><span class="p">,</span><span class="s1">&#39;Solar: Capacity (kW)&#39;</span><span class="p">,</span>
+              <span class="s2">&quot;Solar: Generation (kWh/year)&quot;</span><span class="p">,</span>
+              <span class="s1">&#39;Solar: Utility Diesel Displaced (gallons/year)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Solar: Heating Fuel Displaced (gallons/year)&#39;</span><span class="p">,</span>
+              <span class="s2">&quot;Solar: Heat Recovery Cost Savings ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Solar: Electricity Cost Savings ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Solar: Project Capital Cost ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Solar: Total Cost Savings ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Solar: Net Benefit ($/year)&quot;</span><span class="p">]</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span>\
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;_output.csv&quot;</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+
+        <span class="c1"># save to end of project(actual lifetime)</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">ol</span><span class="p">]</span><span class="o">.</span><span class="n">ix</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_end_year</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s2">&quot;Year&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

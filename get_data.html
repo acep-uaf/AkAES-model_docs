@@ -1,0 +1,126 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pulling updated data from the Alaska Energy Data Gateway. &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="index.html" />
+    <link rel="up" title="Instructions" href="instructions.html" />
+    <link rel="next" title="Model Components" href="aaem.components.html" />
+    <link rel="prev" title="Running AAEM from a script" href="scripts.html" />
+
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="pulling-updated-data-from-the-alaska-energy-data-gateway">
+<span id="get-data"></span><h1>Pulling updated data from the Alaska Energy Data Gateway.<a class="headerlink" href="#pulling-updated-data-from-the-alaska-energy-data-gateway" title="Permalink to this headline">¶</a></h1>
+<p>Some of the data sources used by the Alaska Affordable Energy Model are stored in the Alaska Energy Data Gateway(AEDG).  Data in the AEDG may be more current than that stored in the alaska_affordable_energy_model-data repo.  The get-data command allows for creation of a directory with the most current AEDG data, while still using the alaska_affordable_energy_model-data git repo for data not available in the AEDG.  Note: The data in the alaska_affordable_energy_model-data repo has been tested and is known to work.</p>
+<p>To run the get-data command:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem get-data path_to_repo path_to_new_data
+</pre></div>
+</div>
+<ul class="simple">
+<li>path_to_repo: is the path to a local copy of the alaska_affordable_energy_model-data repo</li>
+<li>path_to_new_data: is the path to where the new data will be put</li>
+</ul>
+<p>Then the setup command can be used to set up the model with your new data:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem setup path_to_setup_model path_to_new_data
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem refresh path_to_setup_model path_to_new_data
+</pre></div>
+</div>
+<ul class="simple">
+<li>path_to_setup_model: is the path to create the model files</li>
+<li>path_to_new_data: same path as before, where the new data is</li>
+</ul>
+<p>After completing these steps, the model may be run, and refreshed as normal.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="instructions.html">Instructions</a><ul>
+      <li>Previous: <a href="scripts.html" title="previous chapter">Running AAEM from a script</a></li>
+      <li>Next: <a href="aaem.components.html" title="next chapter">Model Components</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Running AAEM from a script &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="index.html" />
+    <link rel="up" title="Instructions" href="instructions.html" />
+    <link rel="next" title="Pulling updated data from the Alaska Energy Data Gateway." href="get_data.html" />
+    <link rel="prev" title="CLI Commands" href="commands.html" />
+
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="running-aaem-from-a-script">
+<span id="scripts"></span><h1>Running AAEM from a script<a class="headerlink" href="#running-aaem-from-a-script" title="Permalink to this headline">¶</a></h1>
+<p>The Alaska Affordable Energy Model supports the option to run from a script file. This allows communities to be modeled with a variety of different configurations or sets of scalers applied. When the model is run frim a script file the results are stored together, even if the same community is being run multiple times.</p>
+<p>The model may be run from a script as follows:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>aaem run script.yaml
+</pre></div>
+</div>
+<p>The script file is simply a yaml file with the following format:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">global</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">root</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;PATH TO MODEL&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">global config</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;PATH TO ALTERNATE GLOBAL CONFIG&gt;</span>
+  <span class="l l-Scalar l-Scalar-Plain">results tag</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;TAG NAME FOR RESULTS FOLDER&gt;</span>
+
+<span class="l l-Scalar l-Scalar-Plain">communities</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">community</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;COMMUNITY NAME&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">ID</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;ID TO USE WHEN SAVING RESULTS [1]&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">config</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;PATH TO CONFIGURATION FILE, optional [2]&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">scalers</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;SCALERS TO USE, optional [3]&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">diesel price</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;FLOAT&gt;</span>
+     <span class="l l-Scalar l-Scalar-Plain">diesel price adder</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;FLOAT&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">capital costs</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;FLOAT&gt;</span>
+      <span class="l l-Scalar l-Scalar-Plain">kWh consumption</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;FLOAT&gt;</span>
+
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">community</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;COMMUNITY NAME&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">ID</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;ID TO USE WHEN SAVING RESULTS [1]&gt;</span>
+
+  <span class="l l-Scalar l-Scalar-Plain">.</span>
+  <span class="l l-Scalar l-Scalar-Plain">.</span>
+  <span class="l l-Scalar l-Scalar-Plain">.</span>
+
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">community</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;COMMUNITY NAME&gt;</span>
+    <span class="l l-Scalar l-Scalar-Plain">ID</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">&lt;ID TO USE WHEN SAVING RESULTS [1]&gt;</span>
+</pre></div>
+</div>
+<table class="docutils footnote" frame="void" id="id1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td>required if same community is being run multiple times. Each time the community is run in the same script it should have a unique ID</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[2]</td><td>if not provided will use configuration located at &lt;root&gt;/config/&lt;community&gt;.yaml</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td>any of the scalers listed here may be used, see below for descriptions.</td></tr>
+</tbody>
+</table>
+<p>The format above two sections: global and communities. The global section defines the file setup for the model to run and the global configuration. The communities section has a list of communities to run.</p>
+<dl class="docutils">
+<dt>The global section contains three attributes: root, global config, and results tag.</dt>
+<dd><ul class="first last simple">
+<li>root: defines path to model setup, relative to where the command was run, or absolute. The model setup should contain a config directory with all configuration yaml files for communities listed to run without explicitly specified configurations</li>
+<li>global config: a configuration yaml file. This file can contain all default values that are used by every community run. Remember that these values will be over written by values in the community configuration files if same attributes are supplied.</li>
+<li>results tag: This is the tag for the results folder. If ABC is the results tag, the results of this script will be stored in &lt;root&gt;/results_ABC.</li>
+</ul>
+</dd>
+<dt>The community section has a list of communities to run. Each list item should contain the community attribute, and may contain the ID, config, and scalers attributes.</dt>
+<dd><ul class="first last simple">
+<li>community: default name of community. Should match the name of a configuration yaml file in &lt;root&gt;/config unless the config attribute specifies a configuration file to use</li>
+<li>ID: an ID to save the results under. This field is required if the same community is listed multiple times. Each ID field should be unique. The symbol + should not be used in ID.</li>
+<li>config: path to a yaml configuration file, optional</li>
+<li>scalers: set of scalers to modify a community’s behavior in the model, optional. See scalers section for details on scalars that may be used</li>
+</ul>
+</dd>
+<dt>Scalers modify the behavior of the AAEM for a community. The scalers available are diesel price, diesel price added, capital costs, and kWh consumption.</dt>
+<dd><ul class="first last simple">
+<li>diesel price: the diesel prices are multiplied by this value when it is loaded in to the model. Will also modify the electric non-fuel prices. Can be used with diesel price adder <a class="footnote-reference" href="#id6" id="id4">[4]</a>.</li>
+<li>diesel price added: the diesel prices are added to this value when it is loaded in to the model. Will also modify the electric non-fuel prices. Can be used with diesel price <a class="footnote-reference" href="#id6" id="id5">[4]</a>.</li>
+<li>capital costs: the capital costs for all projects are multiplied by this value right before the annual costs are determined.</li>
+<li>kWh consumption: the known electric consumption is multiplied by this value before consumption is forecasted.</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils footnote" frame="void" id="id6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[4]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> If diesel price and diesel price adder are used together the following behavior is achieved: [diesel prices] = diesel price * [diesel prices] + diesel price adder</td></tr>
+</tbody>
+</table>
+<p>Example script:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">global</span><span class="p p-Indicator">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">root</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">./model/script_example</span>
+  <span class="l l-Scalar l-Scalar-Plain">results tag</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">adak_capital_costs</span>
+
+<span class="l l-Scalar l-Scalar-Plain">communities</span><span class="p p-Indicator">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">community</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Adak</span>
+    <span class="l l-Scalar l-Scalar-Plain">ID</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Adak base</span>
+    <span class="l l-Scalar l-Scalar-Plain">scalers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">capital costs</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1.0</span>
+
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">community</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Adak</span>
+    <span class="l l-Scalar l-Scalar-Plain">ID</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Adak plus 10 %</span>
+    <span class="l l-Scalar l-Scalar-Plain">scalers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">capital costs</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1.1</span>
+
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">community</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Adak</span>
+    <span class="l l-Scalar l-Scalar-Plain">ID</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Adak plus 20 %</span>
+    <span class="l l-Scalar l-Scalar-Plain">scalers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">capital costs</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1.2</span>
+
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">community</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Adak</span>
+    <span class="l l-Scalar l-Scalar-Plain">ID</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">Adak plus 30 %</span>
+    <span class="l l-Scalar l-Scalar-Plain">scalers</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">capital costs</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">1.3</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="instructions.html">Instructions</a><ul>
+      <li>Previous: <a href="commands.html" title="previous chapter">CLI Commands</a></li>
+      <li>Next: <a href="get_data.html" title="next chapter">Pulling updated data from the Alaska Energy Data Gateway.</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

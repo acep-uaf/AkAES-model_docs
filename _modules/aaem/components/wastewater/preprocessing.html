@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.wastewater.preprocessing &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.wastewater.preprocessing</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Water Wastewater Preprocessing </span>
+<span class="sd">------------------------------</span>
+
+<span class="sd">preprocessing functions for the Water Wastewater component  </span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># preprocessing in preprocessor</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">read_csv</span><span class="p">,</span> <span class="n">concat</span><span class="p">,</span> <span class="n">DataFrame</span>
+
+<div class="viewcode-block" id="preprocess"><a class="viewcode-back" href="../../../../aaem.components.wastewater.html#aaem.components.wastewater.preprocessing.preprocess">[docs]</a><span class="k">def</span> <span class="nf">preprocess</span><span class="p">(</span><span class="n">preprocessor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Preprocess Water/Wastewater data</span>
+<span class="sd">     </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    preprocessor: aaem.preprocessor.Preprocessor object</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        data for component configuration</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
+        <span class="s2">&quot;water-wastewater_projects_potential.csv&quot;</span><span class="p">)</span>
+    <span class="n">assumptions_file</span> <span class="o">=</span>  <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">data_dir</span><span class="p">,</span>
+        <span class="s2">&quot;water-wastewater_assumptions.csv&quot;</span><span class="p">)</span>
+
+    <span class="c1">## system type mapping From Neil</span>
+    <span class="c1">##Circulating/Gravity: Circulating/Gravity, Circulating/Pressure,</span>
+    <span class="c1">##                     Circulating/ST/DF</span>
+    <span class="c1">##Circulating/Vacuum: Circulating/Vacuum, Closed Haul/Vacuum</span>
+    <span class="c1">##Haul:  Closed Haul/Closed, Haul, Watering Point</span>
+    <span class="c1">##Pressure/Gravity: Pressure/Gravity, Pressure/NA, Pressure/ST/DF</span>
+    <span class="c1">##Washeteria/Honey Bucket: Washeteria</span>
+    <span class="c1">##None:  Wells/Gravity, Wells/NA, Wells/ST/DF, Wells/ST/OF</span>
+
+    <span class="n">sys_map</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;Circulating/Gravity&quot;</span><span class="p">:</span><span class="s2">&quot;Circulating/Gravity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Circulating/Pressure&quot;</span><span class="p">:</span><span class="s2">&quot;Circulating/Gravity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Circulating/ST/DF&quot;</span><span class="p">:</span><span class="s2">&quot;Circulating/Gravity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Circulating/Vacuum&quot;</span><span class="p">:</span><span class="s2">&quot;Circulating/Vac&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Closed Haul/Vacuum&quot;</span><span class="p">:</span><span class="s2">&quot;Circulating/Vac&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Haul&quot;</span><span class="p">:</span><span class="s2">&quot;Haul&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Closed Haul/Closed Haul&quot;</span><span class="p">:</span><span class="s2">&quot;Haul&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Watering Point&quot;</span><span class="p">:</span><span class="s2">&quot;Haul&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Pressure/Gravity&quot;</span><span class="p">:</span> <span class="s2">&quot;Pressure/Gravity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Pressure/NA&quot;</span><span class="p">:</span> <span class="s2">&quot;Pressure/Gravity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Pressure/ST/DF&quot;</span><span class="p">:</span> <span class="s2">&quot;Pressure/Gravity&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Washeteria&quot;</span><span class="p">:</span><span class="s2">&quot;Wash/HB&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;None&quot;</span><span class="p">:</span> <span class="s2">&quot;None&quot;</span><span class="p">,</span>
+              <span class="p">}</span>
+
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ww_d</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span>
+            <span class="n">index_col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">preprocessor</span><span class="o">.</span><span class="n">community</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="c1">#~ raise StandardError, str(com_id) + &quot; is not in &quot; + data_file</span>
+        <span class="n">preprocessor</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_warning</span><span class="p">(</span><span class="s2">&quot;Wastewater&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;system not found, &quot;</span> <span class="o">+</span> \
+                                     <span class="s2">&quot;assuming zeros&quot;</span><span class="p">)</span>
+        <span class="n">ww_d</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">data_file</span><span class="p">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="n">index_col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ww_d</span><span class="p">[:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">ww_d</span><span class="p">[</span><span class="s2">&quot;System Type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;UNKNOWN&quot;</span>
+        <span class="n">ww_d</span><span class="p">[</span><span class="s2">&quot;HR Installed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">ww_d</span><span class="p">[</span><span class="s2">&quot;Biomass&quot;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">ww_d</span><span class="p">[</span><span class="s2">&quot;Biomass&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">sys_type</span> <span class="o">=</span> <span class="n">sys_map</span><span class="p">[</span><span class="n">ww_d</span><span class="p">[</span><span class="s2">&quot;System Type&quot;</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">sys_type</span> <span class="o">==</span> <span class="s2">&quot;None&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="s2">&quot;no w/ww system&quot;</span>
+        <span class="n">ww_a</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">assumptions_file</span><span class="p">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="n">index_col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">ww_a</span> <span class="o">=</span> <span class="n">ww_a</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="n">sys_type</span><span class="p">]</span>
+        <span class="n">ww_a</span><span class="p">[</span><span class="s2">&quot;assumption type used&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sys_type</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">concat</span><span class="p">([</span><span class="n">ww_d</span><span class="p">,</span><span class="n">ww_a</span><span class="p">])</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span> <span class="p">)</span><span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">preprocessor</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_warning</span><span class="p">(</span><span class="s2">&quot;wastewater&quot;</span><span class="p">,</span>
+                                     <span class="s2">&quot;system type unknown&quot;</span><span class="p">)</span>
+        <span class="n">ww_d</span><span class="p">[</span><span class="s1">&#39;HDD kWh&#39;</span><span class="p">]</span>	<span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">ww_d</span><span class="p">[</span><span class="s1">&#39;HDD HF&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">ww_d</span><span class="p">[</span><span class="s1">&#39;pop kWh&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">ww_d</span><span class="p">[</span><span class="s1">&#39;pop HF&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="n">ww_d</span><span class="p">[</span><span class="s2">&quot;Year&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2010</span>
+        <span class="n">ww_d</span><span class="p">[</span><span class="s2">&quot;assumption type used&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;UNKNOWN&quot;</span>
+        <span class="c1">#~ ww_d.to_csv(out_file, mode = &#39;a&#39;)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">ww_d</span>
+
+    <span class="n">start_year</span> <span class="o">=</span> <span class="mi">2017</span>
+    <span class="k">if</span> <span class="s1">&#39;www_start_year&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">start_year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;www_start_year&#39;</span><span class="p">])</span>   
+    
+    <span class="n">lifetime</span> <span class="o">=</span> <span class="mi">15</span>
+    <span class="k">if</span> <span class="s1">&#39;www_project_lifetime&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">lifetime</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;www_project_lifetime&#39;</span><span class="p">])</span> 
+
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;Water and Wastewater Efficiency&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> 
+            <span class="s1">&#39;start year&#39;</span><span class="p">:</span> <span class="n">start_year</span><span class="p">,</span>
+            <span class="s1">&#39;lifetime&#39;</span><span class="p">:</span> <span class="n">lifetime</span><span class="p">,</span> 
+            <span class="s1">&#39;audit cost&#39;</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>
+            <span class="s1">&#39;average refit cost&#39;</span><span class="p">:</span> <span class="mf">360.0</span><span class="p">,</span> 
+            <span class="s1">&#39;electricity refit reduction&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+            <span class="s1">&#39;heating fuel refit reduction&#39;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+            <span class="s1">&#39;heat recovery multiplier&#39;</span><span class="p">:</span> <span class="o">.</span><span class="mi">5</span><span class="p">,</span> 
+            <span class="s1">&#39;heating cost percent&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+            <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">df</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">data</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

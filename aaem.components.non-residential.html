@@ -1,0 +1,453 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.non_residential package &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="index.html" />
+
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="aaem-components-non-residential-package">
+<h1>aaem.components.non_residential package<a class="headerlink" href="#aaem-components-non-residential-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="aaem-components-non-residential-community-buildings-module">
+<h2>aaem.components.non_residential.community_buildings module<a class="headerlink" href="#aaem-components-non-residential-community-buildings-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-aaem.components.non_residential.component">
+<span id="aaem-components-non-residential-component-module"></span><h2>aaem.components.non_residential.component module<a class="headerlink" href="#module-aaem.components.non_residential.component" title="Permalink to this headline">¶</a></h2>
+<p>component.py</p>
+<blockquote>
+<div>Non-Residential Building Efficiency component body</div></blockquote>
+<dl class="class">
+<dt id="aaem.components.non_residential.component.CommunityBuildings">
+<em class="property">class </em><code class="descclassname">aaem.components.non_residential.component.</code><code class="descname">CommunityBuildings</code><span class="sig-paren">(</span><em>community_data</em>, <em>forecast</em>, <em>diag=None</em>, <em>prerequisites={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="aaem.components.annual_savings.html#aaem.components.annual_savings.annual_savings.AnnualSavings" title="aaem.components.annual_savings.annual_savings.AnnualSavings"><code class="xref py py-class docutils literal"><span class="pre">aaem.components.annual_savings.annual_savings.AnnualSavings</span></code></a></p>
+<p>for forecasting community building consumption/savings</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.add_additional_buildings">
+<code class="descname">add_additional_buildings</code><span class="sig-paren">(</span><em>num_not_heated=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.add_additional_buildings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.add_additional_buildings" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>adds additional buildings to the building dataframe</div></blockquote>
+<p>(self.comp_specs[&#8216;com building data&#8217;])</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>self.additional_buildings and num_not_heated are integers</dd>
+</dl>
+<p>where self.additional_buildings &gt; num_not_heated
+post:</p>
+<blockquote>
+<div>self.comp_specs[&#8216;com building data&#8217;] extra buildings,
+a diagnostic message is added</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.calc_annual_electric_savings">
+<code class="descname">calc_annual_electric_savings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.calc_annual_electric_savings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.calc_annual_electric_savings" title="Permalink to this definition">¶</a></dt>
+<dd><p>forecast the electric savings</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>self.refit_savings_kWh_total, self.diesel_prices, should be</dd>
+<dt>available </dt>
+<dd>AEAA.diesel_generation_eff: TODO</dd>
+<dt>post:</dt>
+<dd>self.annual_electric_savings containt the projected savings</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.calc_annual_heating_savings">
+<code class="descname">calc_annual_heating_savings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.calc_annual_heating_savings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.calc_annual_heating_savings" title="Permalink to this definition">¶</a></dt>
+<dd><p>forecast the electric savings</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>self.refit_savings_HF_total, self.diesel_prices, should be</dd>
+<dt>available </dt>
+<dd>AEAA.diesel_generation_eff: TODO</dd>
+<dt>post:</dt>
+<dd>self.annual_heating_savings containt the projected savings</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.calc_baseline_HF_consumption">
+<code class="descname">calc_baseline_HF_consumption</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.calc_baseline_HF_consumption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.calc_baseline_HF_consumption" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate pre refit kWh use</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>self.comp_specs[&#8220;com building estimates&#8221;][&#8220;HDD&#8221;] is a Pandas</dd>
+</dl>
+<p>series of heating degree day values (deg. C/day) with the building 
+types as keys. self.comp_specs[&#8220;com building estimates&#8221;][&#8220;Gal/sf&#8221;] is
+a Pandas series of Gal/sqft. values building types as keys. 
+self.comp_specs[&#8216;com building data&#8217;] is a Pandas DataFrame containing 
+the actual data on buildings in the community, indexed by building type
+post:</p>
+<blockquote>
+<div>self.baseline_HF_consumption is the base line heating fuel</div></blockquote>
+<p>consumption for the community (pre-refit). 
+self.comp_specs[&#8216;com building data&#8217;][&#8216;Fuel Oil&#8217;] has been updated with 
+square fuel oil use estimates (gal/yr).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.calc_baseline_kWh_consumption">
+<code class="descname">calc_baseline_kWh_consumption</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.calc_baseline_kWh_consumption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.calc_baseline_kWh_consumption" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate pre refit kWh use</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>self.comp_specs[&#8220;com building estimates&#8221;][&#8220;kWh/sf&#8221;] is a Pandas</dd>
+</dl>
+<p>series of kWh/sqft. values building types as keys. 
+self.comp_specs[&#8216;com building data&#8217;] is a Pandas DataFrame containing 
+the actual data on buildings in the community, indexed by building type
+post:</p>
+<blockquote>
+<div>self.baseline_kWh_consumption is the base line electricity</div></blockquote>
+<p>consumption for the community (pre-refit). 
+self.comp_specs[&#8216;com building data&#8217;][&#8216;Electric&#8217;] has been updated with 
+square fuel oil use estimates (kWh/yr).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.calc_capital_costs">
+<code class="descname">calc_capital_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.calc_capital_costs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.calc_capital_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>calc refit cost</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>self.comp_specs[&#8216;com building data&#8217;] is a Pandas DataFrame</dd>
+</dl>
+<p>containing the actual data on buildings in the community, indexed by 
+building type. self.refit_cost_rate is the $$/sqft. for preforming a 
+refit to the building. 
+post:</p>
+<blockquote>
+<div>self.refit_cost_total is the total cost to refit buildings in the</div></blockquote>
+<p>community ($$). 
+self.comp_specs[&#8216;com building data&#8217;][&#8216;implementation cost&#8217;] has been 
+updated with  cost estimates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.calc_proposed_HF_consumption">
+<code class="descname">calc_proposed_HF_consumption</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.calc_proposed_HF_consumption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.calc_proposed_HF_consumption" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.calc_proposed_kWh_consumption">
+<code class="descname">calc_proposed_kWh_consumption</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.calc_proposed_kWh_consumption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.calc_proposed_kWh_consumption" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate refit kWh savings</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>tbd</dd>
+<dt>post: </dt>
+<dd>self.refit_savings_kWh, self.benchmark_savings_kWh,</dd>
+</dl>
+<p>self.additional_savings_kWh, are floating-point kWh values</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.calc_total_sqft_to_retrofit">
+<code class="descname">calc_total_sqft_to_retrofit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.calc_total_sqft_to_retrofit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.calc_total_sqft_to_retrofit" title="Permalink to this definition">¶</a></dt>
+<dd><p>calc refit square feet</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>self.comp_specs[&#8220;com building estimates&#8221;][&#8220;Sqft&#8221;] is a Pandas series</dd>
+</dl>
+<p>indexed by building type of sqft. estimates for the community. 
+self.comp_specs[&#8216;com building data&#8217;] is a Pandas DataFrame containing 
+the actual data on buildings in the community, indexed by building type
+post:</p>
+<blockquote>
+<div>self.total_sqft_to_retrofit is the total sqft. that can retrofitted in</div></blockquote>
+<p>the community. self.comp_specs[&#8216;com building data&#8217;][&#8216;Square Feet&#8217;] has
+been updated with square footage estimates.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.get_fuel_total_saved">
+<code class="descname">get_fuel_total_saved</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.get_fuel_total_saved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.get_fuel_total_saved" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the total fuel saved in gallons</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.get_intertie_builing_inventory">
+<code class="descname">get_intertie_builing_inventory</code><span class="sig-paren">(</span><em>community_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.get_intertie_builing_inventory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.get_intertie_builing_inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>for interties we need to load the entire building inventory</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.get_total_enery_produced">
+<code class="descname">get_total_enery_produced</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.get_total_enery_produced"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.get_total_enery_produced" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns the total energy saved</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>scalers={'capital costs': 1.0}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>run the forecast model</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>self.cd should be the community library from a community data object</dd>
+<dt>post:</dt>
+<dd>TODO: define output values. 
+the model is run and the output values are available</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.save_additional_output">
+<code class="descname">save_additional_output</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.save_additional_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.save_additional_output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.save_building_summay">
+<code class="descname">save_building_summay</code><span class="sig-paren">(</span><em>file_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.save_building_summay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.save_building_summay" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.non_residential.component.CommunityBuildings.update_num_buildings">
+<code class="descname">update_num_buildings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/component.html#CommunityBuildings.update_num_buildings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.component.CommunityBuildings.update_num_buildings" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>This function compares the counted buildings with the estimated</div></blockquote>
+<p>buildings</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd>&#8216;com building data&#8217; is a DataFrame, and &#8220;number buildings&#8221; is</dd>
+</dl>
+<p>an integer 
+post:</p>
+<blockquote>
+<div>a warning may be added to self.diagnostics</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-aaem.components.non_residential.config">
+<span id="aaem-components-non-residential-config-module"></span><h2>aaem.components.non_residential.config module<a class="headerlink" href="#module-aaem.components.non_residential.config" title="Permalink to this headline">¶</a></h2>
+<p>config.py</p>
+<blockquote>
+<div>Non-Residential Building Efficiency config info for community data yaml file</div></blockquote>
+</div>
+<div class="section" id="module-aaem.components.non_residential.inputs">
+<span id="aaem-components-non-residential-inputs-module"></span><h2>aaem.components.non_residential.inputs module<a class="headerlink" href="#module-aaem.components.non_residential.inputs" title="Permalink to this headline">¶</a></h2>
+<p>inputs.py</p>
+<blockquote>
+<div>input functions for Non-Residential Building Efficiency component</div></blockquote>
+<dl class="function">
+<dt id="aaem.components.non_residential.inputs.load_building_data">
+<code class="descclassname">aaem.components.non_residential.inputs.</code><code class="descname">load_building_data</code><span class="sig-paren">(</span><em>data_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/inputs.html#load_building_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.inputs.load_building_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function doc</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.non_residential.inputs.load_building_estimates">
+<code class="descclassname">aaem.components.non_residential.inputs.</code><code class="descname">load_building_estimates</code><span class="sig-paren">(</span><em>data_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/inputs.html#load_building_estimates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.inputs.load_building_estimates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function doc</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.non_residential.inputs.load_num_buildings">
+<code class="descclassname">aaem.components.non_residential.inputs.</code><code class="descname">load_num_buildings</code><span class="sig-paren">(</span><em>data_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/inputs.html#load_num_buildings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.inputs.load_num_buildings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function doc</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aaem.components.non_residential.outputs">
+<span id="aaem-components-non-residential-outputs-module"></span><h2>aaem.components.non_residential.outputs module<a class="headerlink" href="#module-aaem.components.non_residential.outputs" title="Permalink to this headline">¶</a></h2>
+<p>outputs.py</p>
+<blockquote>
+<div>ouputs functions for Non-Residential Building Efficiency component</div></blockquote>
+<dl class="function">
+<dt id="aaem.components.non_residential.outputs.communities_summary">
+<code class="descclassname">aaem.components.non_residential.outputs.</code><code class="descname">communities_summary</code><span class="sig-paren">(</span><em>coms</em>, <em>res_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/outputs.html#communities_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.outputs.communities_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>creates a log for the non-residental component outputs by community</p>
+<dl class="docutils">
+<dt>pre:</dt>
+<dd><dl class="first docutils">
+<dt>coms: the run model outputs: a dictionary </dt>
+<dd><dl class="first docutils">
+<dt>{&lt;&#8221;community_name&#8221;&gt;:</dt>
+<dd><blockquote class="first">
+<div>{&#8216;model&#8217;:&lt;a run driver object&gt;,
+&#8216;output dir&#8217;:&lt;a path to the given communites outputs&gt;
+},</div></blockquote>
+<p class="last">... repeated for each community</p>
+</dd>
+</dl>
+<p class="last">}</p>
+</dd>
+</dl>
+<p class="last">res_dir: directory to save the log in</p>
+</dd>
+<dt>post:</dt>
+<dd>a csv file &#8220;non-residential_summary.csv&#8221;log is saved in res_dir</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.non_residential.outputs.component_summary">
+<code class="descclassname">aaem.components.non_residential.outputs.</code><code class="descname">component_summary</code><span class="sig-paren">(</span><em>results</em>, <em>res_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/outputs.html#component_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.outputs.component_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>creats the regional and communites summary for the component</p>
+<dl class="docutils">
+<dt>inputs:</dt>
+<dd>results: results from the model
+res_dir: location to save file</dd>
+<dt>outputs:</dt>
+<dd>saves a summaries in res-dir</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.non_residential.outputs.create_project_details_list">
+<code class="descclassname">aaem.components.non_residential.outputs.</code><code class="descname">create_project_details_list</code><span class="sig-paren">(</span><em>project</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/outputs.html#create_project_details_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.outputs.create_project_details_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>makes a projects details section for the html</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.non_residential.outputs.create_regional_summary">
+<code class="descclassname">aaem.components.non_residential.outputs.</code><code class="descname">create_regional_summary</code><span class="sig-paren">(</span><em>results</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/outputs.html#create_regional_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.outputs.create_regional_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>create the regional summary for this component</p>
+<dl class="docutils">
+<dt>inputs:</dt>
+<dd>results: results from the model</dd>
+<dt>outputs:</dt>
+<dd>returns summary as a data frame</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.non_residential.outputs.generate_web_summary">
+<code class="descclassname">aaem.components.non_residential.outputs.</code><code class="descname">generate_web_summary</code><span class="sig-paren">(</span><em>web_object</em>, <em>community</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/outputs.html#generate_web_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.outputs.generate_web_summary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.non_residential.outputs.save_regional_summary">
+<code class="descclassname">aaem.components.non_residential.outputs.</code><code class="descname">save_regional_summary</code><span class="sig-paren">(</span><em>summary</em>, <em>res_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/non_residential/outputs.html#save_regional_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.non_residential.outputs.save_regional_summary" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>inputs:</dt>
+<dd>summary: summary dataframe
+res_dir: location to save file</dd>
+<dt>outputs:</dt>
+<dd>save a regional summary in res-dir</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-aaem.components.non_residential.preprocessing">
+<span id="aaem-components-non-residential-preprocessing-module"></span><h2>aaem.components.non_residential.preprocessing module<a class="headerlink" href="#module-aaem.components.non_residential.preprocessing" title="Permalink to this headline">¶</a></h2>
+<p>preprocessing.py</p>
+<blockquote>
+<div>preprocessing functions for Non-Residential Building Efficiency component</div></blockquote>
+</div>
+<div class="section" id="module-aaem.components.non_residential">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-aaem.components.non_residential" title="Permalink to this headline">¶</a></h2>
+<p>__init__.py</p>
+<blockquote>
+<div>model component for findng economic benefits related to improving</div></blockquote>
+<p>Non-Residential Building Efficiency in a community</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">aaem.components.non_residential package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#aaem-components-non-residential-community-buildings-module">aaem.components.non_residential.community_buildings module</a></li>
+<li><a class="reference internal" href="#module-aaem.components.non_residential.component">aaem.components.non_residential.component module</a></li>
+<li><a class="reference internal" href="#module-aaem.components.non_residential.config">aaem.components.non_residential.config module</a></li>
+<li><a class="reference internal" href="#module-aaem.components.non_residential.inputs">aaem.components.non_residential.inputs module</a></li>
+<li><a class="reference internal" href="#module-aaem.components.non_residential.outputs">aaem.components.non_residential.outputs module</a></li>
+<li><a class="reference internal" href="#module-aaem.components.non_residential.preprocessing">aaem.components.non_residential.preprocessing module</a></li>
+<li><a class="reference internal" href="#module-aaem.components.non_residential">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

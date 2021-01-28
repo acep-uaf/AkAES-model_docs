@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.biomass_pellet.component &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.biomass_pellet.component</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Biomass Pellet component body</span>
+<span class="sd">-----------------------------</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">aaem.components.annual_savings</span> <span class="k">import</span> <span class="n">AnnualSavings</span>
+<span class="kn">from</span> <span class="nn">aaem.community_data</span> <span class="k">import</span> <span class="n">CommunityData</span>
+<span class="kn">from</span> <span class="nn">aaem.forecast</span> <span class="k">import</span> <span class="n">Forecast</span>
+<span class="kn">from</span> <span class="nn">aaem.diagnostics</span> <span class="k">import</span> <span class="n">Diagnostics</span>
+<span class="kn">import</span> <span class="nn">aaem.constants</span> <span class="k">as</span> <span class="nn">constants</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">COMPONENT_NAME</span><span class="p">,</span> <span class="n">UNKNOWN</span>
+
+<span class="kn">import</span> <span class="nn">aaem.components.biomass_base</span> <span class="k">as</span> <span class="nn">bmb</span>
+
+<div class="viewcode-block" id="BiomassPellet"><a class="viewcode-back" href="../../../../aaem.components.biomass_pellet.html#aaem.components.biomass_pellet.component.BiomassPellet">[docs]</a><span class="k">class</span> <span class="nc">BiomassPellet</span> <span class="p">(</span><span class="n">bmb</span><span class="o">.</span><span class="n">BiomassBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Biomass Pellet component of the Alaska Affordable Energy Model:</span>
+<span class="sd">    This module estimates the potential reduction in heating fuel use</span>
+<span class="sd">    from installation of pellet boilers in non- residential buildings.</span>
+<span class="sd">    Reduction in fuel used is based on estimated output of hypothetical</span>
+<span class="sd">    boiler. Savings result from difference in fuel prices between diesel</span>
+<span class="sd">    and pellets. The costs of the biomass projects are estimated from number</span>
+<span class="sd">    of installed boilers and their size. Communities must have access to</span>
+<span class="sd">    road system.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    community_data : CommunityData</span>
+<span class="sd">        CommunityData Object for a community</span>
+<span class="sd">    forecast : Forecast</span>
+<span class="sd">        forecast for a community</span>
+<span class="sd">    diagnostics : diagnostics, optional</span>
+<span class="sd">        diagnostics for tracking error/warning messages</span>
+<span class="sd">    prerequisites : dictionary of components, optional</span>
+<span class="sd">        &#39;Non-residential Energy Efficiency&#39; component is a required prerequisite</span>
+<span class="sd">        for this component</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    diagnostics : diagnostics</span>
+<span class="sd">        for tracking error/warning messages</span>
+<span class="sd">        initial value: diag or new diagnostics object</span>
+<span class="sd">    forecast : forecast</span>
+<span class="sd">        community forecast for estimating future values</span>
+<span class="sd">        initial value: forecast</span>
+<span class="sd">    cd : dictionary</span>
+<span class="sd">        general data for a community.</span>
+<span class="sd">        Initial value: &#39;community&#39; section of community_data</span>
+<span class="sd">    comp_specs : dictionary</span>
+<span class="sd">        component specific data for a community.</span>
+<span class="sd">        Initial value: &#39;Biomass Pellet&#39; section of community_data</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    aaem.community_data :</span>
+<span class="sd">        community data module, see information on CommunityData Object</span>
+<span class="sd">    aaem.forecast :</span>
+<span class="sd">        forecast module, see information on Forecast Object</span>
+<span class="sd">    aaem.diagnostics :</span>
+<span class="sd">        diagnostics module, see information on diagnostics Object</span>
+<span class="sd">    aaem.components.non_residential :</span>
+<span class="sd">        &#39;Non-residential Energy Efficiency&#39; component is a required prerequisite</span>
+<span class="sd">        for this component</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community_data</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span>
+                        <span class="n">diag</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prerequisites</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Class initialiser</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        community_data : CommunityData</span>
+<span class="sd">            CommunityData Object for a community</span>
+<span class="sd">        forecast : Forecast</span>
+<span class="sd">            forecast for a community</span>
+<span class="sd">        diagnostics : diagnostics, optional</span>
+<span class="sd">            diagnostics for tracking error/warning messages</span>
+<span class="sd">        prerequisites : dictionary of components, optional</span>
+<span class="sd">            prerequisite component data,</span>
+<span class="sd">            &#39;Non-residential Energy Efficiency&#39; component</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span> <span class="o">=</span> <span class="n">COMPONENT_NAME</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BiomassPellet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">community_data</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span>
+                                                    <span class="n">diag</span><span class="p">,</span> <span class="n">prerequisites</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">biomass_type</span> <span class="o">=</span> <span class="s2">&quot;pellets&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span> <span class="s2">&quot;tons&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span>
+
+<div class="viewcode-block" id="BiomassPellet.run"><a class="viewcode-back" href="../../../../aaem.components.biomass_pellet.html#aaem.components.biomass_pellet.component.BiomassPellet.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;capital costs&#39;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">}):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the component. The Annual Total Savings,Annual Costs,</span>
+<span class="sd">        Annual Net Benefit, NPV Benefits, NPV Costs, NPV Net Benefits,</span>
+<span class="sd">        Benefit Cost Ratio, Levelized Cost of Energy,</span>
+<span class="sd">        and Internal Rate of Return will all be calculated.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scalers: dictionary of valid scalers, optional</span>
+<span class="sd">            Scalers to adjust normal run variables.</span>
+<span class="sd">            See note on accepted  scalers</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run : bool</span>
+<span class="sd">            True in the component runs to completion, False otherwise</span>
+<span class="sd">        reason : string</span>
+<span class="sd">            lists reason for failure if run == False</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">            Accepted scalers: capital costs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span>
+
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;file id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">tag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;biomass_pellet&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Not a biomass pellet project.&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;on road system&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_warning</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+                                    <span class="s2">&quot;not on road system&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_boiler_output</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">heat_displaced_sqft</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">biomass_fuel_consumed</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fuel_price_per_unit</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">heat_diesel_displaced</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> \
+              <span class="s2">&quot;Not on road or marine highway system, so it is assumed that&quot;</span> <span class="o">+</span>\
+              <span class="s2">&quot; pellets cannot be delivered cost effectively.&quot;</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;peak month </span><span class="si">% o</span><span class="s1">f total&#39;</span><span class="p">])):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_warning</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+                <span class="s2">&quot;bad config value for &#39;peak month </span><span class="si">% o</span><span class="s2">f total&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_boiler_output</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">heat_displaced_sqft</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">biomass_fuel_consumed</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fuel_price_per_unit</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">heat_diesel_displaced</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;bad config value for &#39;peak month </span><span class="si">% o</span><span class="s2">f total&#39;&quot;</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model heating fuel&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_heat_displaced_sqft</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_energy_output</span><span class="p">()</span>
+            <span class="n">efficiency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;pellet efficiency&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_max_boiler_output</span><span class="p">(</span><span class="n">efficiency</span><span class="p">)</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;capacity factor&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_biomass_fuel_consumed</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_diesel_displaced</span><span class="p">()</span>
+
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model financial&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_diesel_prices</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_capital_costs</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_maintenance_cost</span><span class="p">()</span>
+
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">fuel_price_per_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;pellet price&#39;</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_proposed_biomass_cost</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fuel_price_per_unit</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_displaced_heating_oil_price</span><span class="p">()</span>
+
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_electric_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_heating_savings</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_total_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;interest rate&#39;</span><span class="p">],</span>
+                                            <span class="n">scalers</span><span class="p">[</span><span class="s1">&#39;capital costs&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_net_benefit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_npv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;discount rate&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;current year&quot;</span><span class="p">])</span>
+
+            <span class="n">fuel_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">biomass_fuel_consumed</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">fuel_price_per_unit</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_levelized_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span> <span class="o">+</span>  <span class="n">fuel_cost</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BiomassPellet.calc_maintenance_cost"><a class="viewcode-back" href="../../../../aaem.components.biomass_pellet.html#aaem.components.biomass_pellet.component.BiomassPellet.calc_maintenance_cost">[docs]</a>    <span class="k">def</span> <span class="nf">calc_maintenance_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the project Maintenance costs Costs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        maintenance_costs : float</span>
+<span class="sd">            calculated capital costs for heat recovery ($)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">*</span> <span class="o">.</span><span class="mi">01</span></div>
+
+<div class="viewcode-block" id="BiomassPellet.calc_capital_costs"><a class="viewcode-back" href="../../../../aaem.components.biomass_pellet.html#aaem.components.biomass_pellet.component.BiomassPellet.calc_capital_costs">[docs]</a>    <span class="k">def</span> <span class="nf">calc_capital_costs</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the project Capital Costs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        capital_costs : float</span>
+<span class="sd">            calculated capital costs for heat recovery ($)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_boiler_output</span> <span class="o">*</span> \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;cost per btu/hrs&quot;</span><span class="p">]</span></div></div>
+        <span class="c1">#~ print self.capital_costs</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

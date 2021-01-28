@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Model Components &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="index.html" />
+    <link rel="next" title="Air Source Heat Pump Base Component" href="aaem.components.ashp_base.html" />
+    <link rel="prev" title="Pulling updated data from the Alaska Energy Data Gateway." href="get_data.html" />
+
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="model-components">
+<h1>Model Components<a class="headerlink" href="#model-components" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="components">
+<h2>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.ashp_base.html">Air Source Heat Pump Base Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_base.html#air-sorce-heat-pump-base-configuration">Air Sorce Heat Pump Base Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_base.html#air-source-heat-pump-base-inputs">Air Source Heat Pump Base inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_base.html#air-source-heat-pump-base-outputs">Air Source Heat Pump Base Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_base.html#air-source-heat-pump-preprocessing">Air Source Heat Pump preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.ashp_non_res.html">Air Source Heat Pump Non-residential Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_non_res.html#air-source-heat-pump-non-residential-configuration">Air Source Heat Pump Non-residential Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_non_res.html#air-source-heat-pump-non-residential-outputs">Air Source Heat Pump Non-residential Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_non_res.html#air-source-heat-pump-non-residential-preprocessing">Air Source Heat Pump Non-residential preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.ashp_res.html">Air Source Heat Pump Residential Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_res.html#air-source-heat-pump-residential-configuration">Air Source Heat Pump Residential Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_res.html#air-source-heat-pump-residential-outputs">Air Source Heat Pump Residential Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.ashp_res.html#air-source-heat-pump-residential-preprocessing">Air Source Heat Pump Residential preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.biomass_base.html">Biomass Base Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_base.html#biomass-base-configuration">Biomass Base Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_base.html#biomass-base-inputs">Biomass Base inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_base.html#biomass-base-outputs">Biomass Base Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_base.html#biomass-base-preprocessing">Biomass base preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.biomass_pellet.html">Biomass Pellet Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_pellet.html#biomass-pellet-configuration">Biomass Pellet configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_pellet.html#biomass-pellet-outputs">Biomass Pellet outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_pellet.html#biomass-pellet-preprocessing">Biomass Pellet preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.biomass_wood.html">Biomass Cordwood Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_wood.html#biomass-pellet-configuration">Biomass Pellet configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_wood.html#biomass-cordwood-outputs">Biomass cordwood outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.biomass_wood.html#biomass-cordwood-preprocessing">Biomass Cordwood preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.diesel_efficiency.html">Diesel Efficiency Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.diesel_efficiency.html#diesel-efficiency-configuration">Diesel Efficiency Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.diesel_efficiency.html#diesel-efficiency-inputs">Diesel Efficiency inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.diesel_efficiency.html#diesel-efficiency-outputs">Diesel Efficiency Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.diesel_efficiency.html#diesel-efficiency-preprocessing">Diesel Efficiency preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.heat_recovery.html">Heat Recovery Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.heat_recovery.html#heat-recovery-configuration">Heat Recovery Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.heat_recovery.html#heat-recovery-inputs">Heat Recovery inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.heat_recovery.html#heat-recovery-outputs">Heat Recovery Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.heat_recovery.html#heat-recovery-preprocessing">Heat Recovery preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.hydro.html">Hydropower Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.hydro.html#hydropower-configuration">Hydropower configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.hydro.html#hydropower-inputs">Hydropower inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.hydro.html#hydropower-outputs">Hydropower outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.hydro.html#hydropower-preprocessing">Hydropower preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.non_residential.html">Non-residential Efficiency Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.non_residential.html#non-residential-efficiency-configuration">Non-residential Efficiency configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.non_residential.html#non-residential-efficiency-inputs">Non-Residential Efficiency inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.non_residential.html#non-residential-efficiency-outputs">Non-residential Efficiency outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.non_residential.html#non-residential-efficiency-preprocessing">Non-Residential Efficiency preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.residential_buildings.html">Residential Efficiency Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.residential_buildings.html#residential-efficiency-configuration">Residential Efficiency configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.residential_buildings.html#residential-efficiency-inputs">Residential Efficiency inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.residential_buildings.html#residential-efficiency-outputs">Residential Efficiency outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.residential_buildings.html#residential-efficiency-preprocessing">Residential Efficiency preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.solar_power.html">Solar Power Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.solar_power.html#solar-power-configuration">Solar Power Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.solar_power.html#solar-power-inputs">Solar Power inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.solar_power.html#solar-power-outputs">Solar Power Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.solar_power.html#solar-power-preprocessing">Solar Power Preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.transmission.html">Transmission Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.transmission.html#transmission-configuration">Transmission Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.transmission.html#transmission-inputs">Transmission Inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.transmission.html#transmission-outputs">Transmission Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.transmission.html#transmission-preprocessing">Transmission Preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.wastewater.html">Water Wastewater Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.wastewater.html#water-wastewater-configuration">Water Wastewater Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.wastewater.html#water-wastewater-inputs">Water Wastewater Inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.wastewater.html#water-wastewater-outputs">Water Wastewater Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.wastewater.html#water-wastewater-preprocessing">Water Wastewater Preprocessing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="aaem.components.wind_power.html">Wind Power Component</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.wind_power.html#wind-power-configuration">Wind Power Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.wind_power.html#wind-power-inputs">Wind Power Inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.wind_power.html#wind-power-outputs">Wind Power Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aaem.components.wind_power.html#wind-power-preprocessing">Wind power Preprocessing</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Model Components</a><ul>
+<li><a class="reference internal" href="#components">Components</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="get_data.html" title="previous chapter">Pulling updated data from the Alaska Energy Data Gateway.</a></li>
+      <li>Next: <a href="aaem.components.ashp_base.html" title="next chapter">Air Source Heat Pump Base Component</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

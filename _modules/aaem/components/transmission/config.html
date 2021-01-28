@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.transmission.config &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.transmission.config</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Transmission Configuration</span>
+<span class="sd">--------------------------</span>
+
+<span class="sd">    Contains Transmission configuration info for community</span>
+<span class="sd">    data yaml file, and other set-up requirements</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">aaem.components</span> <span class="k">import</span> <span class="n">definitions</span>
+<span class="kn">from</span> <span class="nn">aaem.community_data</span> <span class="k">import</span> <span class="n">CommunityData</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">COMPONENT_NAME</span> <span class="o">=</span> <span class="s2">&quot;Transmission and Interties&quot;</span>
+<span class="n">IMPORT</span> <span class="o">=</span> <span class="s2">&quot;IMPORT&quot;</span>
+<span class="n">UNKNOWN</span> <span class="o">=</span> <span class="s2">&quot;UNKNOWN&quot;</span>
+
+<span class="n">order</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;enabled&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;lifetime&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;start year&#39;</span><span class="p">,</span>
+
+    <span class="s1">&#39;transmission loss per mile&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nearest community with lower price&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;distance to community&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;maximum savings&#39;</span><span class="p">,</span>
+
+    <span class="s1">&#39;percent o&amp;m&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;heat recovery o&amp;m&#39;</span> <span class="p">,</span>
+    <span class="s1">&#39;est. intertie cost per mile&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;diesel generator o&amp;m&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1">## List of yaml key/value pairs</span>
+<span class="n">structure</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Transmission and Interties&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="s1">&#39;lifetime&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="s1">&#39;start year&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+
+        <span class="s1">&#39;transmission loss per mile&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="s1">&#39;nearest community with lower price&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="s1">&#39;distance to community&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="s1">&#39;maximum savings&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+
+        <span class="s1">&#39;percent o&amp;m&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="s1">&#39;heat recovery o&amp;m&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="s1">&#39;est. intertie cost per mile&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;road needed&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+            <span class="s1">&#39;road not needed&#39;</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;diesel generator o&amp;m&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">comments</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;enabled&#39;</span><span class="p">:</span> <span class="n">definitions</span><span class="o">.</span><span class="n">ENABLED</span><span class="p">,</span>
+    <span class="s1">&#39;lifetime&#39;</span><span class="p">:</span> <span class="n">definitions</span><span class="o">.</span><span class="n">LIFETIME</span><span class="p">,</span>
+    <span class="s1">&#39;start year&#39;</span><span class="p">:</span> <span class="n">definitions</span><span class="o">.</span><span class="n">START_YEAR_WITH_TYPE</span><span class="p">,</span>
+
+    <span class="s1">&#39;transmission loss per mile&#39;</span><span class="p">:</span> <span class="s1">&#39;[float] percent of energy lost per mile&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;nearest community with lower price&#39;</span><span class="p">:</span>  <span class="s1">&#39;[str] name of community to connect to&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;distance to community&#39;</span><span class="p">:</span>  <span class="s1">&#39;[float] distance from community to connect to [mile]&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;maximum savings&#39;</span><span class="p">:</span> <span class="s1">&#39;[float] max possible savings&#39;</span><span class="p">,</span>
+
+    <span class="s1">&#39;percent o&amp;m&#39;</span><span class="p">:</span> <span class="s1">&#39;[float] percent of capital costs to use as maintenance costs&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;heat recovery o&amp;m&#39;</span> <span class="p">:</span> <span class="s1">&#39;[float] operation and maintenance costs for heat recovery [$/year]&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;est. intertie cost per mile&#39;</span><span class="p">:</span> <span class="s1">&#39;[dict] cost per mile of transmission line [$/mile]&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;diesel generator o&amp;m&#39;</span><span class="p">:</span>
+        <span class="s1">&#39;[dict] cost(value) to maintain diesel generator per kw upper limit (key) with else key&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="load_other_community"><a class="viewcode-back" href="../../../../aaem.components.transmission.html#aaem.components.transmission.config.load_other_community">[docs]</a><span class="k">def</span> <span class="nf">load_other_community</span><span class="p">(</span><span class="n">community_data</span><span class="p">,</span>
+    <span class="n">community_config</span><span class="p">,</span> <span class="n">global_config</span><span class="p">,</span> <span class="n">scalers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;load info for other community</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">        community_data</span>
+<span class="sd">        community_config</span>
+<span class="sd">        global_config</span>
+<span class="sd">        scalers</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    new_intertie_data : CommunityData</span>
+<span class="sd">        community data for community to connect to. this attribute</span>
+<span class="sd">    is added to the main communities community data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">community_data</span><span class="o">.</span><span class="n">new_intertie_data</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">com</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span>
+        <span class="s1">&#39;Transmission and Interties&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;nearest community with lower price&#39;</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">com</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">com</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">intertie</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span><span class="s1">&#39;community&#39;</span><span class="p">,</span> <span class="s1">&#39;intertie&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">intertie</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span> <span class="ow">and</span> <span class="n">com</span> <span class="ow">in</span> <span class="n">intertie</span><span class="p">:</span>
+        <span class="n">community_data</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_warning</span><span class="p">(</span>
+            <span class="s1">&#39;Transmission&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Community is already intertied to &#39;</span> <span class="o">+</span> <span class="n">com</span> <span class="o">+</span>\
+                <span class="s1">&#39; setting nearest community to none&#39;</span>
+        <span class="p">)</span>
+        <span class="n">community_data</span><span class="o">.</span><span class="n">set_item</span><span class="p">(</span>
+            <span class="s1">&#39;Transmission and Interties&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;nearest community with lower price&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;&#39;</span>
+        <span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">com</span> <span class="o">=</span> <span class="n">com</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+    <span class="n">rt_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">community_config</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1">#~ print rt_path, com</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rt_path</span><span class="p">,</span> <span class="n">com</span><span class="p">)</span>
+    <span class="c1">#~ self.connect_to_intertie = False</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span> <span class="o">+</span><span class="s1">&#39;_intertie.yaml&#39;</span><span class="p">):</span>
+        <span class="c1">#~ self.connect_to_intertie = True</span>
+        <span class="n">path</span> <span class="o">+=</span> <span class="s1">&#39;_intertie&#39;</span>
+    <span class="c1">#~ print path</span>
+    <span class="n">path</span> <span class="o">+=</span> <span class="s1">&#39;.yaml&#39;</span>
+    <span class="n">community_data</span><span class="o">.</span><span class="n">new_intertie_data</span> <span class="o">=</span> <span class="n">CommunityData</span><span class="p">(</span>
+        <span class="n">path</span><span class="p">,</span>
+        <span class="n">global_config</span><span class="p">,</span>
+        <span class="n">community_data</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">,</span>
+        <span class="n">scalers</span>
+    <span class="p">)</span></div>
+
+
+<span class="n">plugins</span> <span class="o">=</span> <span class="p">[</span><span class="n">load_other_community</span><span class="p">]</span>
+<span class="c1">## list of prerequisites for module</span>
+<span class="n">prereq_comps</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

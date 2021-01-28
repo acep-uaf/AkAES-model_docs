@@ -1,0 +1,317 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.non_residential.outputs &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.non_residential.outputs</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Non-residential Efficiency outputs</span>
+<span class="sd">----------------------------------</span>
+
+<span class="sd">output functions for Non-residential Efficiency component</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">COMPONENT_NAME</span>
+<span class="kn">import</span> <span class="nn">aaem.constants</span> <span class="k">as</span> <span class="nn">constants</span>
+
+<span class="kn">from</span> <span class="nn">aaem.components</span> <span class="k">import</span> <span class="n">comp_order</span><span class="p">,</span> <span class="n">definitions</span>
+
+<span class="c1">## component summary</span>
+<div class="viewcode-block" id="component_summary"><a class="viewcode-back" href="../../../../aaem.components.non_residential.html#aaem.components.non_residential.outputs.component_summary">[docs]</a><span class="k">def</span> <span class="nf">component_summary</span> <span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">res_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates the regional and communities summary for the component in provided </span>
+
+<span class="sd">    directory</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : dictionary</span>
+<span class="sd">        results from the model, dictionary with each community or project </span>
+<span class="sd">        as key</span>
+<span class="sd">    res_dir :  path</span>
+<span class="sd">        location to save file</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">communities_summary</span> <span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">res_dir</span><span class="p">)</span>
+    <span class="n">save_regional_summary</span><span class="p">(</span><span class="n">create_regional_summary</span> <span class="p">(</span><span class="n">results</span><span class="p">),</span> <span class="n">res_dir</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="communities_summary"><a class="viewcode-back" href="../../../../aaem.components.non_residential.html#aaem.components.non_residential.outputs.communities_summary">[docs]</a><span class="k">def</span> <span class="nf">communities_summary</span> <span class="p">(</span><span class="n">coms</span><span class="p">,</span> <span class="n">res_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Saves the summary by: community non-residential_building_summary.csv</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coms : dictionary</span>
+<span class="sd">        results from the model, dictionary with each community or project </span>
+<span class="sd">        as key</span>
+<span class="sd">    res_dir :  path</span>
+<span class="sd">        location to save file</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">coms</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="c1"># or c.find(&quot;_intertie&quot;) != -1:</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">com</span> <span class="o">=</span> <span class="n">coms</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">COMPONENT_NAME</span><span class="p">]</span>
+            <span class="n">savings</span> <span class="o">=</span> <span class="p">(</span><span class="n">com</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">-</span>\
+                      <span class="n">com</span><span class="o">.</span><span class="n">proposed_HF_consumption</span> <span class="p">)</span> <span class="o">*</span> <span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span>
+            
+            <span class="n">name</span> <span class="o">=</span> <span class="n">c</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Barrow&#39;</span><span class="p">:</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Utqiagvik (Barrow)&#39;</span>
+            
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">com</span><span class="o">.</span><span class="n">get_NPV_benefits</span><span class="p">(),</span><span class="n">com</span><span class="o">.</span><span class="n">get_NPV_costs</span><span class="p">(),</span>
+                <span class="n">com</span><span class="o">.</span><span class="n">get_NPV_net_benefit</span><span class="p">(),</span><span class="n">com</span><span class="o">.</span><span class="n">irr</span><span class="p">,</span><span class="n">com</span><span class="o">.</span><span class="n">get_BC_ratio</span><span class="p">(),</span>
+                <span class="n">com</span><span class="o">.</span><span class="n">hoil_price</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">com</span><span class="o">.</span><span class="n">elec_price</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                <span class="n">com</span><span class="o">.</span><span class="n">num_buildings</span> <span class="p">,</span> <span class="n">com</span><span class="o">.</span><span class="n">total_sqft_to_retrofit</span><span class="p">,</span>
+                <span class="n">com</span><span class="o">.</span><span class="n">break_even_cost</span><span class="p">,</span>
+                <span class="n">com</span><span class="o">.</span><span class="n">levelized_cost_of_energy</span><span class="p">[</span><span class="s1">&#39;MMBtu&#39;</span><span class="p">],</span>
+                <span class="n">com</span><span class="o">.</span><span class="n">levelized_cost_of_energy</span><span class="p">[</span><span class="s1">&#39;kWh&#39;</span><span class="p">],</span>
+                <span class="n">com</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">*</span> <span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span><span class="p">,</span> 
+                <span class="n">com</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span><span class="p">,</span>
+                <span class="n">savings</span><span class="p">,</span>
+                <span class="n">com</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span> <span class="o">-</span> <span class="n">com</span><span class="o">.</span><span class="n">proposed_kWh_consumption</span><span class="p">])</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span><span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1">#~ print c +&quot;:&quot;+ str(e)</span>
+            <span class="k">pass</span>
+            
+            
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Community&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Efficiency NPV Benefit&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Efficiency NPV Cost&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Efficiency NPV Net Benefit&#39;</span><span class="p">,</span>
+            
+            <span class="s1">&#39;Non-residential Internal Rate of Return&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Efficiency B/C Ratio&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Heating Oil Price - year 1&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;$ per kWh - year 1&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Number Non-residential Buildings&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Total Square Footage&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Breakeven Heating Fuel Price [$/gal heating oil equiv.]&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Levelized Cost of Energy [$/MMBtu]&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Levelized Cost of Energy [$/kWh]&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Heating oil equiv. Consumed(gal) - year 1&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Electricity Consumed (kWh) - year 1&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Efficiency Heating oil equiv. Saved[gal/year]&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential Efficiency Electricity Saved [kWh/year]&#39;</span><span class="p">]</span>
+            
+    <span class="n">data</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="n">columns</span> <span class="o">=</span> <span class="n">cols</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;Community&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">f_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res_dir</span><span class="p">,</span> <span class="n">COMPONENT_NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_summary.csv&#39;</span><span class="p">)</span>
+    <span class="n">fd</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">f_name</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">write</span><span class="p">((</span><span class="s2">&quot;# non residential building component summary by community</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="s1">&#39;# Community: &#39;</span><span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">COMMUNITY</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Efficiency NPV Benefit: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">NPV_BENEFITS</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Efficiency NPV Cost: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">NPV_COSTS</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Efficiency NPV Net Benefit: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">NPV_NET_BENEFITS</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Internal Rate of Return: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">IRR</span> <span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Efficiency B/C Ratio: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">NPV_BC_RATIO</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Heating Oil Price - year 1: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PRICE_HF</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# $ per kWh - year 1: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PRICE_ELECTRICITY</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Number Non-residential Buildings: Number of buildings in the community.</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Total Square Footage: Total Square footage from buildings.</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Breakeven Heating Fuel Price [$/gal heating oil equiv.]: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">BREAK_EVEN_COST_HF</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Levelized Cost of Energy [$/MMBtu]: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">LCOE</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Levelized Cost of Energy [$/kWh]: &#39;</span> <span class="o">+</span> <span class="n">definitions</span><span class="o">.</span><span class="n">LCOE</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Heating Oil equiv. Consumed(gal) - year 1: Heating energy consumed in a community with out improvements.</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Electricity Consumed (kWh) - year 1: Electricity consumed in a community without improvements.</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Efficiency Heating oil equiv. Saved[gal/year]: Heating energy saved in a community with improvements.</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">&#39;# Non-residential Efficiency Electricity Saved [kWh/year]: Electricity consumed in a community with improvements.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+    <span class="n">fd</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">f_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="create_regional_summary"><a class="viewcode-back" href="../../../../aaem.components.non_residential.html#aaem.components.non_residential.outputs.create_regional_summary">[docs]</a><span class="k">def</span> <span class="nf">create_regional_summary</span> <span class="p">(</span><span class="n">results</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates the regional summary</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results : dictionary</span>
+<span class="sd">        results from the model, dictionary with each community or project </span>
+<span class="sd">        as key</span>
+<span class="sd">            </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DataFrame </span>
+<span class="sd">        containing regional results</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#~ print &quot;start&quot;</span>
+    <span class="n">regions</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">c_region</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="s1">&#39;community data&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span><span class="s1">&#39;community&#39;</span><span class="p">,</span><span class="s1">&#39;region&#39;</span><span class="p">)</span>
+        <span class="n">comp</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">COMPONENT_NAME</span><span class="p">]</span>
+        <span class="c1">#~ print comp</span>
+        <span class="n">bc_ratio</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">get_BC_ratio</span><span class="p">()</span>
+        <span class="n">bc_ratio</span> <span class="o">=</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">type</span><span class="p">(</span><span class="n">bc_ratio</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">bc_ratio</span><span class="p">))</span>\
+                                              <span class="ow">and</span> <span class="p">(</span><span class="n">bc_ratio</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="c1">#~ print bc_ratio ,comp.get_BC_ratio()</span>
+        <span class="c1">#~ return</span>
+        <span class="n">capex</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">get_NPV_costs</span><span class="p">(),</span><span class="mi">0</span><span class="p">)</span>  <span class="k">if</span> <span class="n">bc_ratio</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">net_benefit</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">get_NPV_net_benefit</span><span class="p">(),</span><span class="mi">0</span><span class="p">)</span>  <span class="k">if</span> <span class="n">bc_ratio</span> <span class="k">else</span> <span class="mi">0</span>
+       
+        <span class="n">displaced_fuel</span> <span class="o">=</span> \
+            <span class="nb">round</span><span class="p">((</span><span class="n">comp</span><span class="o">.</span><span class="n">baseline_HF_consumption</span> <span class="o">-</span>\
+                      <span class="n">comp</span><span class="o">.</span><span class="n">proposed_HF_consumption</span> <span class="p">)</span> <span class="o">*</span> <span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span> <span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">bc_ratio</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="n">displaced_kWh</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">comp</span><span class="o">.</span><span class="n">baseline_kWh_consumption</span> <span class="o">-</span>\
+                <span class="n">comp</span><span class="o">.</span><span class="n">proposed_kWh_consumption</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">bc_ratio</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="c1">#~ print c</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">c_region</span> <span class="ow">in</span> <span class="n">regions</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1">## append entry</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="s1">&#39;Number of communities/interties in region&#39;</span><span class="p">]</span> <span class="o">+=</span><span class="mi">1</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;Number of communities with cost effective projects&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">bc_ratio</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;Investment needed for cost-effective projects ($)&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">capex</span> 
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;Net benefit of cost-effective projects ($)&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">net_benefit</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;Heating oil displaced yearly (gallons)&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">displaced_fuel</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;kWh displaced yearly (kwh)&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">+=</span> <span class="n">displaced_kWh</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">## set up &quot;first&quot; entry</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Number of communities/interties in region&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">}</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;Number of communities with cost effective projects&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">bc_ratio</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;Investment needed for cost-effective projects ($)&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">capex</span> 
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;Net benefit of cost-effective projects ($)&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">net_benefit</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;Heating oil displaced yearly (gallons)&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">displaced_fuel</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;kWh displaced yearly (kwh)&#39;</span>
+            <span class="n">regions</span><span class="p">[</span><span class="n">c_region</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">displaced_kWh</span>
+            
+    <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Number of communities/interties in region&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Number of communities with cost effective projects&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Investment needed for cost-effective projects ($)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Net benefit of cost-effective projects ($)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Heating oil displaced yearly (gallons)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;kWh displaced yearly (kwh)&#39;</span><span class="p">]</span>
+                        
+    <span class="k">try</span><span class="p">:</span>        
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span> <span class="o">=</span> <span class="n">cols</span><span class="p">)</span>
+                        
+    <span class="n">summary</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="s1">&#39;All Regions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">summary</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>                 
+    <span class="c1">#~ print summary</span>
+    <span class="k">return</span> <span class="n">summary</span></div>
+    
+<div class="viewcode-block" id="save_regional_summary"><a class="viewcode-back" href="../../../../aaem.components.non_residential.html#aaem.components.non_residential.outputs.save_regional_summary">[docs]</a><span class="k">def</span> <span class="nf">save_regional_summary</span> <span class="p">(</span><span class="n">summary</span><span class="p">,</span> <span class="n">res_dir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Saves the summary by region</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    summary : DataFrame</span>
+<span class="sd">        compiled regional results</span>
+<span class="sd">    res_dir :  path</span>
+<span class="sd">        location to save file</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">f_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">res_dir</span><span class="p">,</span> <span class="s1">&#39;__regional_&#39;</span> <span class="o">+</span>
+                <span class="n">COMPONENT_NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span>\
+                    <span class="n">replace</span><span class="p">(</span><span class="s1">&#39;(&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;_summary.csv&#39;</span><span class="p">)</span>
+    <span class="n">summary</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">f_name</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;region&#39;</span><span class="p">)</span></div>
+    
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

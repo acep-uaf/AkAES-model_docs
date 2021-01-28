@@ -1,0 +1,621 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Air Source Heat Pump Base Component &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="index.html" />
+    <link rel="up" title="Model Components" href="aaem.components.html" />
+    <link rel="next" title="Air Source Heat Pump Non-residential Component" href="aaem.components.ashp_non_res.html" />
+    <link rel="prev" title="Model Components" href="aaem.components.html" />
+
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="air-source-heat-pump-base-component">
+<h1>Air Source Heat Pump Base Component<a class="headerlink" href="#air-source-heat-pump-base-component" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="aaem.components.ashp_base.component.ASHPBase">
+<em class="property">class </em><code class="descclassname">aaem.components.ashp_base.component.</code><code class="descname">ASHPBase</code><span class="sig-paren">(</span><em>community_data</em>, <em>forecast</em>, <em>diag=None</em>, <em>prerequisites={}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="aaem.components.annual_savings.html#aaem.components.annual_savings.annual_savings.AnnualSavings" title="aaem.components.annual_savings.annual_savings.AnnualSavings"><code class="xref py py-class docutils literal"><span class="pre">aaem.components.annual_savings.annual_savings.AnnualSavings</span></code></a></p>
+<p>Air source heat pump base of the Alaska Affordable Energy Model: Base component
+does nothing on it&#8217;s own.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>community_data</strong> : CommunityData</p>
+<blockquote>
+<div><p>CommunityData Object for a community</p>
+</div></blockquote>
+<p><strong>forecast</strong> : Forecast</p>
+<blockquote>
+<div><p>forecast for a community</p>
+</div></blockquote>
+<p><strong>diagnostics</strong> : diagnostics, optional</p>
+<blockquote>
+<div><p>diagnostics for tracking error/warning messages</p>
+</div></blockquote>
+<p><strong>prerequisites</strong> : dictionary of components, optional</p>
+<blockquote class="last">
+<div><p>none required</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-obj docutils literal"><span class="pre">aaem.community_data</span></code></dt>
+<dd>community data module, see information on CommunityData Object</dd>
+<dt><code class="xref py py-obj docutils literal"><span class="pre">aaem.forecast</span></code></dt>
+<dd>forecast module, see information on Forecast Object</dd>
+<dt><code class="xref py py-obj docutils literal"><span class="pre">aaem.diagnostics</span></code></dt>
+<dd>diagnostics module, see information on diagnostics Object</dd>
+</dl>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="91%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>diagnostics</td>
+<td>(diagnostics) for tracking error/warning messages initial value: diag or new diagnostics object</td>
+</tr>
+<tr class="row-even"><td>forecast</td>
+<td>(forecast) community forecast for estimating future values initial value: forecast</td>
+</tr>
+<tr class="row-odd"><td>cd</td>
+<td>(dictionary) general data for a community. Initial value: &#8216;community&#8217; section of community_data</td>
+</tr>
+<tr class="row-even"><td>comp_specs</td>
+<td>(dictionary) component specific data for a community. Initial value: &#8216;ASHP Base&#8217; section of community_data</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_annual_electric_savings">
+<code class="descname">calc_annual_electric_savings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_annual_electric_savings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_annual_electric_savings" title="Permalink to this definition">¶</a></dt>
+<dd><p>electric savings placeholder for child components</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="55%" />
+<col width="45%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>annual_electric_savings</td>
+<td>(float) set to zero</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_annual_heating_savings">
+<code class="descname">calc_annual_heating_savings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_annual_heating_savings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_annual_heating_savings" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate heating savings per year</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="74%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>annual_heating_savings</td>
+<td>(float) base heating cost minus the proposed ashp operation cost</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_ashp_system_parameters">
+<code class="descname">calc_ashp_system_parameters</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_ashp_system_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_ashp_system_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls each of the functions for calculating the ASHP
+operation parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_average_cop">
+<code class="descname">calc_average_cop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_average_cop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_average_cop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate average yearly coefficient of power(cop) of ASHP system</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="15%" />
+<col width="85%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>average_cop</td>
+<td>(float) average yearly coefficient of power(cop) of ASHP system</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_baseline_heating_oil_cost">
+<code class="descname">calc_baseline_heating_oil_cost</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_baseline_heating_oil_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_baseline_heating_oil_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate base line heating fuel cost</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="54%" />
+<col width="46%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>baseline_heating_oil_cost: array of floats</td>
+<td>cost of heating oil per year ($/gal)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_capital_costs">
+<code class="descname">calc_capital_costs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_capital_costs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_capital_costs" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets capital costs to nan, placeholder for child components</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="42%" />
+<col width="58%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>capital_costs</td>
+<td>(float) set to Nan</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_cop_per_month">
+<code class="descname">calc_cop_per_month</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_cop_per_month"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_cop_per_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the coefficient of performance (COP) per month
+COP = output/input</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="37%" />
+<col width="63%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>monthly_value_table: DataFrame</td>
+<td>DataFrame of monthly values related to ASHP systems</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_electric_consumption">
+<code class="descname">calc_electric_consumption</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_electric_consumption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_electric_consumption" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate the electric consumption for the year</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>electric_consumption: float</td>
+<td>estimated electric consumption for a year</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_electric_energy_input_per_month">
+<code class="descname">calc_electric_energy_input_per_month</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_electric_energy_input_per_month"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_electric_energy_input_per_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate kWh produced per month</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="39%" />
+<col width="61%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>monthly_value_table[&#8216;kWh consumed&#8217;]</td>
+<td>adds kWh consumed per month to the monthly_value_table</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_heat_energy_produced_per_month">
+<code class="descname">calc_heat_energy_produced_per_month</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_heat_energy_produced_per_month"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_heat_energy_produced_per_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>calc the mmbtu consumed per month</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="39%" />
+<col width="61%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>monthly_value_table[&#8216;mmbtu/mon&#8217;]</td>
+<td>mmbtu per month is added to the monthly_value_table</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_heat_energy_produced_per_year">
+<code class="descname">calc_heat_energy_produced_per_year</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_heat_energy_produced_per_year"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_heat_energy_produced_per_year" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the heat energy produced per year by ASHP system
+(TODO: Double check definition) defined in child components</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_heating_oil_consumed_per_month">
+<code class="descname">calc_heating_oil_consumed_per_month</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_heating_oil_consumed_per_month"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_heating_oil_consumed_per_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate heating oil consumed per month</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="48%" />
+<col width="52%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>monthly_value_table[&#8216;Heating Oil Consumed (gal)&#8217;]</td>
+<td>adds kWh consumed per month to the monthly_value_table</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_heating_oil_saved">
+<code class="descname">calc_heating_oil_saved</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_heating_oil_saved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_heating_oil_saved" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates heating oil saved per year with ASHP system</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="77%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>heating_oil_saved</td>
+<td>(float) Savings  in heating oil from ASHP system per year</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_heating_oil_saved_per_month">
+<code class="descname">calc_heating_oil_saved_per_month</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_heating_oil_saved_per_month"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_heating_oil_saved_per_month" title="Permalink to this definition">¶</a></dt>
+<dd><p>calculate heating oil saved per month</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="45%" />
+<col width="55%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>monthly_value_table[&#8216;Heating Oil saved(gal)&#8217;]</td>
+<td>adds kWh consumed per month to the monthly_value_table</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.calc_proposed_ashp_operation_cost">
+<code class="descname">calc_proposed_ashp_operation_cost</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.calc_proposed_ashp_operation_cost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.calc_proposed_ashp_operation_cost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate cost of operation for new ASHP system</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="44%" />
+<col width="56%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>proposed_ashp_operation_cos: array of floats</td>
+<td>cost of electricity for ASHP operation per year ($/kWh)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.get_fuel_total_saved">
+<code class="descname">get_fuel_total_saved</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.get_fuel_total_saved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.get_fuel_total_saved" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get total fuel saved</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>the total fuel saved in gallons</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.get_total_energy_produced">
+<code class="descname">get_total_energy_produced</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.get_total_energy_produced"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.get_total_energy_produced" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get total energy produced</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>the total energy produced</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.load_prerequisite_variables">
+<code class="descname">load_prerequisite_variables</code><span class="sig-paren">(</span><em>comps</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.load_prerequisite_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.load_prerequisite_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load variables from prerequisites, placeholder for child
+components if needed</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>comps</strong> : Dict</p>
+<blockquote class="last">
+<div><p>Dictionary of components</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>scalers={'capital costs': 1.0}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>run placeholder for child components</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>scalers: dictionary of valid scalers, optional</strong></p>
+<blockquote class="last">
+<div><p>Scalers to adjust normal run variables.
+See note on accepted  scalers</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Accepted scalers: capital costs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="aaem.components.ashp_base.component.ASHPBase.save_component_csv">
+<code class="descname">save_component_csv</code><span class="sig-paren">(</span><em>directory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/component.html#ASHPBase.save_component_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.component.ASHPBase.save_component_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the component output csv in directory, place holder</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>directory</strong> : path</p>
+<blockquote class="last">
+<div><p>output directory</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<span class="target" id="module-aaem.components.ashp_base.config"></span><div class="section" id="air-sorce-heat-pump-base-configuration">
+<h2>Air Sorce Heat Pump Base Configuration<a class="headerlink" href="#air-sorce-heat-pump-base-configuration" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>Contains Air Sorce Heat Pump Base configuration info for community
+data yaml file, and other set-up requirements</div></blockquote>
+</div>
+<span class="target" id="module-aaem.components.ashp_base.inputs"></span><div class="section" id="air-source-heat-pump-base-inputs">
+<h2>Air Source Heat Pump Base inputs<a class="headerlink" href="#air-source-heat-pump-base-inputs" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>input functions for Air Source Heat Pump Base component</div></blockquote>
+<dl class="function">
+<dt id="aaem.components.ashp_base.inputs.import_perfromance_data">
+<code class="descclassname">aaem.components.ashp_base.inputs.</code><code class="descname">import_perfromance_data</code><span class="sig-paren">(</span><em>data_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#aaem.components.ashp_base.inputs.import_perfromance_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>read the data from ashp_perfromance_data.csv</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_dir: path</strong></p>
+<blockquote>
+<div><p>path to data directory for community</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>data</strong> : dict</p>
+<blockquote class="last">
+<div><p>with &#8216;Tempeature&#8217;, &#8216;COP&#8217;, and &#8216;PPercent of Total Capacity</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="aaem.components.ashp_base.inputs.process_data_import">
+<code class="descclassname">aaem.components.ashp_base.inputs.</code><code class="descname">process_data_import</code><span class="sig-paren">(</span><em>data_dir</em><span class="sig-paren">)</span><a class="headerlink" href="#aaem.components.ashp_base.inputs.process_data_import" title="Permalink to this definition">¶</a></dt>
+<dd><p>read the data from ashp_climate_data.csv</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data_dir: path</strong></p>
+<blockquote>
+<div><p>path to data directory for community</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>data</strong> : DataFrame</p>
+<blockquote class="last">
+<div><p>cliamte data from component to use</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<span class="target" id="module-aaem.components.ashp_base.outputs"></span><div class="section" id="air-source-heat-pump-base-outputs">
+<h2>Air Source Heat Pump Base Outputs<a class="headerlink" href="#air-source-heat-pump-base-outputs" title="Permalink to this headline">¶</a></h2>
+<p>output functions for Air Source Heat Pump component</p>
+<dl class="function">
+<dt id="aaem.components.ashp_base.outputs.component_summary">
+<code class="descclassname">aaem.components.ashp_base.outputs.</code><code class="descname">component_summary</code><span class="sig-paren">(</span><em>coms</em>, <em>res_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/outputs.html#component_summary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.outputs.component_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Placeholder for components based on this ASHP_base does nothing</p>
+</dd></dl>
+
+</div>
+<span class="target" id="module-aaem.components.ashp_base.preprocessing"></span><div class="section" id="air-source-heat-pump-preprocessing">
+<h2>Air Source Heat Pump preprocessing<a class="headerlink" href="#air-source-heat-pump-preprocessing" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>preprocessing functions for Air Source Heat Pump Base Component</div></blockquote>
+<dl class="function">
+<dt id="aaem.components.ashp_base.preprocessing.preprocess">
+<code class="descclassname">aaem.components.ashp_base.preprocessing.</code><code class="descname">preprocess</code><span class="sig-paren">(</span><em>preprocessor</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/aaem/components/ashp_base/preprocessing.html#preprocess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#aaem.components.ashp_base.preprocessing.preprocess" title="Permalink to this definition">¶</a></dt>
+<dd><p>preprocess data related to existing projects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>preprocessor: preprocessor.Preprocessor</strong></p>
+<blockquote>
+<div><p>a preprocessor object</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>project names</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Air Source Heat Pump Base Component</a><ul>
+<li><a class="reference internal" href="#air-sorce-heat-pump-base-configuration">Air Sorce Heat Pump Base Configuration</a></li>
+<li><a class="reference internal" href="#air-source-heat-pump-base-inputs">Air Source Heat Pump Base inputs</a></li>
+<li><a class="reference internal" href="#air-source-heat-pump-base-outputs">Air Source Heat Pump Base Outputs</a></li>
+<li><a class="reference internal" href="#air-source-heat-pump-preprocessing">Air Source Heat Pump preprocessing</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="aaem.components.html">Model Components</a><ul>
+      <li>Previous: <a href="aaem.components.html" title="previous chapter">Model Components</a></li>
+      <li>Next: <a href="aaem.components.ashp_non_res.html" title="next chapter">Air Source Heat Pump Non-residential Component</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

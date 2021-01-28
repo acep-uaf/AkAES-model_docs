@@ -1,0 +1,704 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.wind_power.component &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.wind_power.component</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Wind Power Component Body</span>
+<span class="sd">-------------------------</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">aaem.components.annual_savings</span> <span class="k">import</span> <span class="n">AnnualSavings</span>
+<span class="kn">from</span> <span class="nn">aaem.community_data</span> <span class="k">import</span> <span class="n">CommunityData</span>
+<span class="kn">from</span> <span class="nn">aaem.forecast</span> <span class="k">import</span> <span class="n">Forecast</span>
+<span class="kn">from</span> <span class="nn">aaem.diagnostics</span> <span class="k">import</span> <span class="n">Diagnostics</span>
+<span class="kn">import</span> <span class="nn">aaem.constants</span> <span class="k">as</span> <span class="nn">constants</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">COMPONENT_NAME</span><span class="p">,</span> <span class="n">UNKNOWN</span>
+
+<div class="viewcode-block" id="WindPower"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower">[docs]</a><span class="k">class</span> <span class="nc">WindPower</span><span class="p">(</span><span class="n">AnnualSavings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wind power component of the Alaska Affordable Energy Model: This</span>
+<span class="sd">    module estimates potential reduction in diesel fuel use from the</span>
+<span class="sd">    installation of wind power systems. Proposed wind generation is</span>
+<span class="sd">    from existing projects or estimated from a proposed capacity. Financial</span>
+<span class="sd">    savings result from decrease in diesel used in generation due to wind systems.</span>
+<span class="sd">    The cost to build or improve wind infrastructure are also estimated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    community_data : CommunityData</span>
+<span class="sd">        CommunityData Object for a community</span>
+<span class="sd">    forecast : Forecast</span>
+<span class="sd">        forecast for a community</span>
+<span class="sd">    diagnostics : diagnostics, optional</span>
+<span class="sd">        diagnostics for tracking error/warning messages</span>
+<span class="sd">    prerequisites : dictionary of components, optional</span>
+<span class="sd">        prerequisite component data this component has no prerequisites</span>
+<span class="sd">        leave empty</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    diagnostics : diagnostics</span>
+<span class="sd">        for tracking error/warning messages</span>
+<span class="sd">        initial value: diag or new diagnostics object</span>
+<span class="sd">    forecast : forecast</span>
+<span class="sd">        community forecast for estimating future values</span>
+<span class="sd">        initial value: forecast</span>
+<span class="sd">    cd : dictionary</span>
+<span class="sd">        general data for a community.</span>
+<span class="sd">        Initial value: &#39;community&#39; section of community_data</span>
+<span class="sd">    comp_specs : dictionary</span>
+<span class="sd">        component specific data for a community.</span>
+<span class="sd">        Initial value: &#39;wind power&#39; section of community_data</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    aaem.community_data :</span>
+<span class="sd">        community data module, see information on CommunityData Object</span>
+<span class="sd">    aaem.forecast :</span>
+<span class="sd">        forecast module, see information on Forecast Object</span>
+<span class="sd">    aaem.diagnostics :</span>
+<span class="sd">        diagnostics module, see information on diagnostics Object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community_data</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span>
+                        <span class="n">diag</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prerequisites</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Class initialiser.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        community_data : CommunityData</span>
+<span class="sd">            CommunityData Object for a community</span>
+<span class="sd">        forecast : Forecast</span>
+<span class="sd">            forecast for a community</span>
+<span class="sd">        diagnostics : diagnostics, optional</span>
+<span class="sd">            diagnostics for tracking error/warning messages</span>
+<span class="sd">        prerequisites : dictionary of components, optional</span>
+<span class="sd">            prerequisite component data</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">=</span> <span class="n">diag</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">=</span> <span class="n">diagnostics</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span> <span class="o">=</span> <span class="n">forecast</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cd</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="s1">&#39;community&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">COMPONENT_NAME</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span> <span class="o">=</span> <span class="n">COMPONENT_NAME</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_project_life_details</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;start year&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;lifetime&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="c1">### ADD other initialization stuff</span>
+
+
+
+<div class="viewcode-block" id="WindPower.run"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;capital costs&#39;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">}):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the component. The Annual Total Savings,Annual Costs,</span>
+<span class="sd">        Annual Net Benefit, NPV Benefits, NPV Costs, NPV Net Benefits,</span>
+<span class="sd">        Benefit Cost Ratio, Levelized Cost of Energy,</span>
+<span class="sd">        and Internal Rate of Return will all be calculated. There must be a</span>
+<span class="sd">        known Heat Recovery project for this component to run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scalers: dictionary of valid scalers, optional</span>
+<span class="sd">            Scalers to adjust normal run variables.</span>
+<span class="sd">            See note on accepted  scalers</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run : bool</span>
+<span class="sd">            True in the component runs to completion, False otherwise</span>
+<span class="sd">        reason : string</span>
+<span class="sd">            lists reason for failure if run == False</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">            Accepted scalers: capital costs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;file id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">tag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;wind&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Not a Wind project&quot;</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1">#~ self.generation = self.forecast.get_generation(self.start_year)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_average_load</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_generation_wind_proposed</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_warning</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+                            <span class="s2">&quot;could not be run&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Could not Calculate average load or &quot;</span>
+                                    <span class="s2">&quot;proposed generation&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+
+
+
+        <span class="c1">#~ #~ print self.comp_specs[&#39;wind class&#39;]</span>
+        <span class="c1"># ??? some kind of failure message</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;average load limit&#39;</span><span class="p">]</span> <span class="ow">and</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="c1">#~ float(self.comp_specs[&#39;wind class&#39;]) &gt; \</span>
+                <span class="c1">#~ self.comp_specs[&#39;minimum wind class&#39;] and \</span>
+
+        <span class="c1"># if the average load is greater that the lower limit run this component</span>
+        <span class="c1"># else skip</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_transmission_losses</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_excess_energy</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_net_generation_wind</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_electric_diesel_reduction</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_diesel_equiv_captured</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_loss_heat_recovery</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_reduction_diesel_used</span><span class="p">()</span>
+
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model financial&quot;</span><span class="p">]:</span>
+                <span class="c1"># AnnualSavings functions (don&#39;t need to write)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">get_diesel_prices</span><span class="p">()</span>
+
+                <span class="c1"># change these below</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_capital_costs</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_maintenance_cost</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_electric_savings</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_heating_savings</span><span class="p">()</span>
+
+                <span class="c1"># AnnualSavings functions (don&#39;t need to write)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_total_savings</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;interest rate&#39;</span><span class="p">],</span>
+                                            <span class="n">scalers</span><span class="p">[</span><span class="s1">&#39;capital costs&#39;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_net_benefit</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_npv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;discount rate&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;current year&quot;</span><span class="p">])</span>
+                <span class="c1">#~ print self.benefit_cost_ratio</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">calc_levelized_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#~ print &quot;wind project not feasible&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Proposed load offset less than 0&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> \
+                    <span class="s2">&quot;Average load too small for viable wind generation.&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span><span class="o">.</span><span class="n">add_note</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="p">,</span>
+            <span class="s2">&quot;communities average load is not large enough to consider project&quot;</span><span class="p">)</span></div>
+        <span class="c1">#~ print self.benefit_cost_ratio</span>
+
+<div class="viewcode-block" id="WindPower.calc_average_load"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_average_load">[docs]</a>    <span class="k">def</span> <span class="nf">calc_average_load</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the Average Diesel load of the current system</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        generation: np.array</span>
+<span class="sd">            current diesel generation</span>
+<span class="sd">        average_load : float</span>
+<span class="sd">            average diesel load of current system</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;proposed capacity&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">UNKNOWN</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span><span class="o">.</span><span class="n">generation</span><span class="p">[</span><span class="s1">&#39;generation diesel&#39;</span><span class="p">]</span>\
+                                                            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_year</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span><span class="o">.</span><span class="n">yearly_average_diesel_load</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_year</span><span class="p">]</span></div>
+        <span class="c1">#~ print &#39;self.average_load&#39;,self.average_load</span>
+
+<div class="viewcode-block" id="WindPower.calc_generation_wind_proposed"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_generation_wind_proposed">[docs]</a>    <span class="k">def</span> <span class="nf">calc_generation_wind_proposed</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the proposed generation for wind.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        load_offset_proposed : float</span>
+<span class="sd">            kW capacity</span>
+<span class="sd">        generation_wind_proposed : float</span>
+<span class="sd">            kWh/year</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;proposed capacity&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">UNKNOWN</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span> <span class="o">=</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;proposed capacity&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span> <span class="o">=</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;proposed generation&#39;</span><span class="p">]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span> <span class="o">==</span> <span class="n">UNKNOWN</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span> <span class="o">*</span>\
+                                    <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span>\
+                                        <span class="p">[</span><span class="s1">&#39;capacity factor&#39;</span><span class="p">])</span><span class="o">*</span>\
+                                    <span class="n">constants</span><span class="o">.</span><span class="n">hours_per_year</span>
+
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span><span class="o">*</span>\
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;percent generation to offset&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span>
+        <span class="c1">#~ print self.forecast.generation[&#39;generation hydro&#39;].sum()</span>
+
+        <span class="c1"># removed on purpose</span>
+        <span class="c1">#~ hydro = \</span>
+            <span class="c1">#~ self.forecast.generation[&#39;generation hydro&#39;].fillna(0).sum()</span>
+        <span class="c1">#~ if hydro &gt; 0:</span>
+            <span class="c1">#~ offset *= 2</span>
+
+        <span class="c1"># existing very variable RE</span>
+        <span class="n">existing_RE</span> <span class="o">=</span> \
+            <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;wind capacity&#39;</span><span class="p">]))</span> <span class="o">+</span> \
+            <span class="nb">int</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;solar capacity&#39;</span><span class="p">]))</span>
+
+        <span class="k">if</span> <span class="n">existing_RE</span> <span class="o">&lt;</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">offset</span><span class="o">/</span><span class="mi">25</span><span class="p">)</span> <span class="o">*</span> <span class="mi">25</span><span class="p">):</span> <span class="c1"># ???</span>
+            <span class="c1">#~ print &quot;True&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">offset</span><span class="o">/</span><span class="mi">25</span><span class="p">)</span> <span class="o">*</span> <span class="mi">25</span> <span class="o">-</span> <span class="n">existing_RE</span>
+
+
+
+        <span class="c1"># not needed for now</span>
+        <span class="c1">#~ self.total_wind_generation = self.generation_load_proposed + \</span>
+                    <span class="c1">#~ int(self.comp_specs[&#39;wind capacity&#39;])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span> <span class="o">*</span> \
+            <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;capacity factor&#39;</span><span class="p">])</span><span class="o">*</span>\
+                                    <span class="n">constants</span><span class="o">.</span><span class="n">hours_per_year</span></div>
+        <span class="c1">#~ print &#39;self.load_offset_proposed&#39;,self.load_offset_proposed</span>
+        <span class="c1">#~ print &#39;self.generation_wind_proposed&#39;,self.generation_wind_proposed</span>
+
+<div class="viewcode-block" id="WindPower.calc_transmission_losses"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_transmission_losses">[docs]</a>    <span class="k">def</span> <span class="nf">calc_transmission_losses</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate the line losses on proposed system</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        transmission_losses : float</span>
+<span class="sd">            transmission losses (kWh/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#~ print self.generation_wind_proposed, self.cd[&#39;line losses&#39;]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transmission_losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span> <span class="o">*</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;line losses&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span></div>
+        <span class="c1">#~ print &#39;self.transmission_losses&#39;,self.transmission_losses</span>
+
+<div class="viewcode-block" id="WindPower.calc_excess_energy"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_excess_energy">[docs]</a>    <span class="k">def</span> <span class="nf">calc_excess_energy</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the excess energy.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        excess_energy : float</span>
+<span class="sd">            excess energy(kWh/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#~ print sorted(self.cd.keys())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">excess_energy</span> <span class="o">=</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">transmission_losses</span><span class="p">)</span> <span class="o">*</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;percent excess energy&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span></div>
+        <span class="c1">#~ print &#39;self.excess_energy&#39;,self.excess_energy</span>
+
+<div class="viewcode-block" id="WindPower.calc_net_generation_wind"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_net_generation_wind">[docs]</a>    <span class="k">def</span> <span class="nf">calc_net_generation_wind</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the proposed net generation.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        net_wind_generation : float</span>
+<span class="sd">            net wind generation (kWh/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">net_generation_wind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span>  <span class="o">-</span> \
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">transmission_losses</span>  <span class="o">-</span>\
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">excess_energy</span></div>
+        <span class="c1">#~ print &#39;self.net_generation_wind&#39;,self.net_generation_wind</span>
+
+<div class="viewcode-block" id="WindPower.calc_electric_diesel_reduction"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_electric_diesel_reduction">[docs]</a>    <span class="k">def</span> <span class="nf">calc_electric_diesel_reduction</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the reduction in diesel due to the proposed wind.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        electric_diesel_reduction : float</span>
+<span class="sd">            reduction in generation diesel (gal/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gen_eff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;diesel generation efficiency&quot;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">electric_diesel_reduction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_generation_wind</span> <span class="o">/</span> <span class="n">gen_eff</span>
+
+        <span class="n">electric_diesel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="o">/</span><span class="n">gen_eff</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_diesel_reduction</span> <span class="o">&gt;</span> <span class="n">electric_diesel</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">electric_diesel_reduction</span> <span class="o">=</span> <span class="n">electric_diesel</span></div>
+
+<div class="viewcode-block" id="WindPower.calc_diesel_equiv_captured"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_diesel_equiv_captured">[docs]</a>    <span class="k">def</span> <span class="nf">calc_diesel_equiv_captured</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate heat energy captured</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        diesel_equiv_captured : float</span>
+<span class="sd">            Gal/year</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">excess_percent</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">excess_percent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">excess_energy</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span>
+        <span class="n">excess_captured_percent</span> <span class="o">=</span> <span class="n">excess_percent</span> <span class="o">*</span> \
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;percent excess energy capturable&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;secondary load&#39;</span><span class="p">]:</span>
+            <span class="n">net_excess_energy</span> <span class="o">=</span> <span class="n">excess_captured_percent</span> <span class="o">*</span> \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">generation_wind_proposed</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">net_excess_energy</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1">#~ conversion = 0.99/0.138/0.8/293</span>
+        <span class="n">conversion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;efficiency electric boiler&#39;</span><span class="p">]</span><span class="o">/</span> \
+                     <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span><span class="p">)</span><span class="o">/</span> \
+                     <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;efficiency heating oil boiler&#39;</span><span class="p">]</span><span class="o">/</span>\
+                     <span class="p">(</span><span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_kWh</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diesel_equiv_captured</span> <span class="o">=</span> <span class="n">net_excess_energy</span> <span class="o">*</span> <span class="n">conversion</span></div>
+
+        <span class="c1">#~ print &#39;self.diesel_equiv_captured &#39;,self.diesel_equiv_captured</span>
+
+<div class="viewcode-block" id="WindPower.calc_loss_heat_recovery"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_loss_heat_recovery">[docs]</a>    <span class="k">def</span> <span class="nf">calc_loss_heat_recovery</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate heat recovery lost.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loss_heat_recovery : float</span>
+<span class="sd">            Gal/year</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hr_used</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;heat recovery operational&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_heat_recovery</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">hr_used</span><span class="p">:</span><span class="c1"># == &#39;Yes&#39;:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_heat_recovery</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_diesel_reduction</span> <span class="o">*</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;percent heat recovered&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span></div>
+        <span class="c1">#~ print &#39;self.loss_heat_recovery&#39;,self.loss_heat_recovery</span>
+
+<div class="viewcode-block" id="WindPower.calc_reduction_diesel_used"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_reduction_diesel_used">[docs]</a>    <span class="k">def</span> <span class="nf">calc_reduction_diesel_used</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate Diesel generation reduction.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        reduction_diesel_used : float</span>
+<span class="sd">            Gal/year</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reduction_diesel_used</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diesel_equiv_captured</span> <span class="o">-</span> \
+                                     <span class="bp">self</span><span class="o">.</span><span class="n">loss_heat_recovery</span></div>
+        <span class="c1">#~ print &#39;self.reduction_diesel_used&#39;,self.reduction_diesel_used</span>
+
+<div class="viewcode-block" id="WindPower.get_fuel_total_saved"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.get_fuel_total_saved">[docs]</a>    <span class="k">def</span> <span class="nf">get_fuel_total_saved</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get total fuel saved.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            the total fuel saved in gallons</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_diesel_reduction</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduction_diesel_used</span></div>
+
+<div class="viewcode-block" id="WindPower.get_total_energy_produced"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.get_total_energy_produced">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_energy_produced</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get total energy produced.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            the total energy produced</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_generation_wind</span></div>
+
+<div class="viewcode-block" id="WindPower.calc_maintenance_cost"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_maintenance_cost">[docs]</a>    <span class="k">def</span> <span class="nf">calc_maintenance_cost</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the maintenance costs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        maintenance_costs : float</span>
+<span class="sd">             total cost of improvements ($), calculated from transmission and</span>
+<span class="sd">             generation costs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;operational costs&#39;</span><span class="p">])</span> \
+                                                                <span class="o">!=</span> <span class="s1">&#39;UNKNOWN&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;operational costs&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span> <span class="o">=</span> \
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;percent o&amp;m&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="mf">100.0</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span></div>
+        <span class="c1">#~ print &#39;self.maintenance_cost&#39;,self.maintenance_cost</span>
+
+
+
+
+    <span class="c1"># Make this do stuff</span>
+<div class="viewcode-block" id="WindPower.calc_capital_costs"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_capital_costs">[docs]</a>    <span class="k">def</span> <span class="nf">calc_capital_costs</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the capital costs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        capital_costs : float</span>
+<span class="sd">            total cost of improvements ($),</span>
+<span class="sd">        cost_per_kwh: float</span>
+<span class="sd">            cost per kW used to determine capital costs  ($/kW)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">powerhouse_control_cost</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;switchgear suitable for renewables&#39;</span><span class="p">]:</span>
+            <span class="n">powerhouse_control_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;switchgear cost&#39;</span><span class="p">]</span>
+
+        <span class="c1">#~ road_needed = self.comp_specs[&#39;road needed for transmission line&#39;]</span>
+
+
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;transmission capital cost&#39;</span><span class="p">])</span>\
+           <span class="o">!=</span> <span class="s1">&#39;UNKNOWN&#39;</span><span class="p">:</span>
+            <span class="n">transmission_line_cost</span> <span class="o">=</span> \
+            <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;transmission capital cost&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;distance to resource&#39;</span><span class="p">])</span> \
+                <span class="o">!=</span> <span class="s1">&#39;UNKNOWN&#39;</span><span class="p">:</span>
+                <span class="n">distance</span> <span class="o">=</span> \
+                    <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span>\
+                        <span class="p">[</span><span class="s1">&#39;distance to resource&#39;</span><span class="p">])</span>
+            <span class="n">transmission_line_cost</span> <span class="o">=</span> \
+                <span class="n">distance</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;est. transmission line cost&#39;</span><span class="p">]</span>
+
+        <span class="n">secondary_load_cost</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;secondary load&#39;</span><span class="p">]:</span>
+            <span class="n">secondary_load_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;secondary load cost&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;generation capital cost&#39;</span><span class="p">])</span> \
+            <span class="o">!=</span> <span class="s1">&#39;UNKNOWN&#39;</span><span class="p">:</span>
+            <span class="n">wind_cost</span> <span class="o">=</span> \
+              <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;generation capital cost&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cost_per_kw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;estimated costs&#39;</span><span class="p">])):</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;estimated costs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="o">&lt;</span> \
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;estimated costs&#39;</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">cost</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;estimated costs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="k">break</span>
+                    <span class="k">continue</span>
+
+                <span class="n">cost</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;estimated costs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">break</span>
+
+            <span class="n">wind_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span> <span class="o">*</span> <span class="n">cost</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cost_per_kw</span> <span class="o">=</span> <span class="n">cost</span>
+
+        <span class="c1">#~ print powerhouse_control_cost</span>
+        <span class="c1">#~ print transmission_line_cost</span>
+        <span class="c1">#~ print secondary_load_cost</span>
+        <span class="c1">#~ print wind_cost</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">=</span> <span class="n">powerhouse_control_cost</span> <span class="o">+</span> <span class="n">transmission_line_cost</span> <span class="o">+</span>\
+                             <span class="n">secondary_load_cost</span> <span class="o">+</span> <span class="n">wind_cost</span></div>
+
+        <span class="c1">#~ print &#39;self.capital_costs&#39;,self.capital_costs</span>
+
+
+    <span class="c1"># Make this do stuff</span>
+<div class="viewcode-block" id="WindPower.calc_annual_electric_savings"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_annual_electric_savings">[docs]</a>    <span class="k">def</span> <span class="nf">calc_annual_electric_savings</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate annual electric savings created by the project.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        baseline_generation_cost : np.array</span>
+<span class="sd">            current cost of generation ($/year)</span>
+<span class="sd">        proposed_generation_cost : np.array</span>
+<span class="sd">            proposed cost of generation ($/year)</span>
+<span class="sd">        annual_electric_savings : np.array</span>
+<span class="sd">            electric savings ($/year) are the difference in the base</span>
+<span class="sd">        and proposed fuel costs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diesel_prices</span>
+        <span class="c1">#TODO add rural v non rural</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_generation_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">electric_diesel_reduction</span> <span class="o">*</span> <span class="n">price</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maintenance_cost</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">annual_electric_savings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_generation_cost</span> <span class="o">-</span> \
+                            <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_cost</span></div>
+        <span class="c1">#~ print &#39;self.annual_electric_savings&#39;,self.annual_electric_savings</span>
+
+
+
+    <span class="c1"># Make this do stuff. Remember the different fuel type prices if using</span>
+<div class="viewcode-block" id="WindPower.calc_annual_heating_savings"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.calc_annual_heating_savings">[docs]</a>    <span class="k">def</span> <span class="nf">calc_annual_heating_savings</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate annual heating savings created by the project.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        annual_heating_savings : np.array</span>
+<span class="sd">            heating savings ($/year)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diesel_prices</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;heating fuel premium&#39;</span><span class="p">])</span>
+
+        <span class="c1">#~ self.base_heating_cost =</span>
+
+        <span class="c1">#~ self.proposed_heating_cost =</span>
+
+
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">annual_heating_savings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduction_diesel_used</span> <span class="o">*</span> <span class="n">price</span></div>
+        <span class="c1">#~ print &#39;self.annual_heating_savings&#39;,self.annual_heating_savings</span>
+
+
+<div class="viewcode-block" id="WindPower.save_component_csv"><a class="viewcode-back" href="../../../../aaem.components.wind_power.html#aaem.components.wind_power.component.WindPower.save_component_csv">[docs]</a>    <span class="k">def</span> <span class="nf">save_component_csv</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the output from the component.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        directory : path</span>
+<span class="sd">            path to save at</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#~ return</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span><span class="p">:</span>
+            <span class="c1">#~ fname = os.path.join(directory,</span>
+                                   <span class="c1">#~ self.component_name + &quot;_output.csv&quot;)</span>
+            <span class="c1">#~ fname = fname.replace(&quot; &quot;,&quot;_&quot;)</span>
+
+            <span class="c1">#~ fd = open(fname, &#39;w&#39;)</span>
+            <span class="c1">#~ fd.write(&quot;Wind Power minimum requirements not met\n&quot;)</span>
+            <span class="c1">#~ fd.close()</span>
+            <span class="k">return</span>
+
+
+        <span class="n">years</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_life</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_year</span>
+
+        <span class="c1"># ??? +/-</span>
+        <span class="c1"># ???</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">({</span>
+                <span class="s1">&#39;Wind: Capacity (kW)&#39;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">load_offset_proposed</span><span class="p">,</span>
+                <span class="s2">&quot;Wind: Generation (kWh/year)&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">net_generation_wind</span><span class="p">,</span>
+                <span class="s1">&#39;Wind: Energy Captured by Secondary Load&#39;</span>
+                    <span class="s1">&#39; (gallons of heating oil equivalent)&#39;</span><span class="p">:</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">diesel_equiv_captured</span><span class="p">,</span>
+                <span class="s1">&#39;Wind: Assumed capacity factor&#39;</span><span class="p">:</span>
+                    <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;capacity factor&#39;</span><span class="p">]),</span>
+                <span class="s1">&#39;Wind: Utility Diesel Displaced (gallons/year)&#39;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">electric_diesel_reduction</span><span class="p">,</span>
+                <span class="s1">&#39;Wind: Heat Recovery Lost (gallons/year)&#39;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">loss_heat_recovery</span><span class="p">,</span>
+                <span class="s2">&quot;Wind: Heat Recovery Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">get_heating_savings_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Wind: Electricity Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">get_electric_savings_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Wind: Project Capital Cost ($/year)&quot;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">get_capital_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Wind: Total Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">get_total_savings_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Wind: Net Benefit ($/year)&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_net_benefit</span><span class="p">(),</span>
+                       <span class="p">},</span> <span class="n">years</span><span class="p">)</span>
+
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Community&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+
+        <span class="n">ol</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Community&quot;</span><span class="p">,</span>
+              <span class="s1">&#39;Wind: Capacity (kW)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Wind: Energy Captured by Secondary Load&#39;</span>
+                        <span class="s1">&#39; (gallons of heating oil equivalent)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Wind: Assumed capacity factor&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Wind: Utility Diesel Displaced (gallons/year)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Wind: Heat Recovery Lost (gallons/year)&#39;</span><span class="p">,</span>
+              <span class="s2">&quot;Wind: Generation (kWh/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Wind: Heat Recovery Cost Savings ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Wind: Electricity Cost Savings ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Wind: Project Capital Cost ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Wind: Total Cost Savings ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Wind: Net Benefit ($/year)&quot;</span><span class="p">]</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> \
+                             <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;_output.csv&quot;</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+        <span class="n">df</span><span class="p">[</span><span class="n">ol</span><span class="p">]</span><span class="o">.</span><span class="n">ix</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_end_year</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s2">&quot;Year&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

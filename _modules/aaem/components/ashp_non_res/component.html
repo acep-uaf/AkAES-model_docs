@@ -1,0 +1,428 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.ashp_non_res.component &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.ashp_non_res.component</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Air Source Heat Pumps - Non-residential component body</span>
+<span class="sd">------------------------------------------------------</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">aaem.components.annual_savings</span> <span class="k">import</span> <span class="n">AnnualSavings</span>
+<span class="kn">from</span> <span class="nn">aaem.community_data</span> <span class="k">import</span> <span class="n">CommunityData</span>
+<span class="kn">from</span> <span class="nn">aaem.forecast</span> <span class="k">import</span> <span class="n">Forecast</span>
+<span class="kn">from</span> <span class="nn">aaem.diagnostics</span> <span class="k">import</span> <span class="n">Diagnostics</span>
+<span class="kn">import</span> <span class="nn">aaem.constants</span> <span class="k">as</span> <span class="nn">constants</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">COMPONENT_NAME</span><span class="p">,</span> <span class="n">UNKNOWN</span>
+
+<span class="kn">import</span> <span class="nn">aaem.components.ashp_base</span> <span class="k">as</span> <span class="nn">ashp_base</span>
+
+<div class="viewcode-block" id="ASHPNonResidential"><a class="viewcode-back" href="../../../../aaem.components.ashp_non_res.html#aaem.components.ashp_non_res.component.ASHPNonResidential">[docs]</a><span class="k">class</span> <span class="nc">ASHPNonResidential</span> <span class="p">(</span><span class="n">ashp_base</span><span class="o">.</span><span class="n">ASHPBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Non-Residential ASHP component of the Alaska Affordable Energy Model:</span>
+<span class="sd">    This model estimates the potential reduction in heating fuel use from</span>
+<span class="sd">    installation of Air Source Heat Pumps in Non-residential buildings.</span>
+<span class="sd">    Reduction in fuel used is based on coefficient of power in hypothetical</span>
+<span class="sd">    ASHP system and heat energy produced per year. Savings result from</span>
+<span class="sd">    differential heating fuel costs and ASHP operation costs. The cost</span>
+<span class="sd">    of the ASHP infrastructure projects are based on the number of</span>
+<span class="sd">    non-residential buildings in the community and the cost of AHSP systems</span>
+<span class="sd">    themselves.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    community_data : CommunityData</span>
+<span class="sd">        CommunityData Object for a community</span>
+<span class="sd">    forecast : Forecast</span>
+<span class="sd">        forecast for a community</span>
+<span class="sd">    diagnostics : diagnostics, optional</span>
+<span class="sd">        diagnostics for tracking error/warning messages</span>
+<span class="sd">    prerequisites : dictionary of components, optional</span>
+<span class="sd">        &#39;Non-residential Energy Efficiency&#39; component is a required prerequisite</span>
+<span class="sd">        for this component</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    diagnostics : diagnostics</span>
+<span class="sd">        for tracking error/warning messages</span>
+<span class="sd">        initial value: diag or new diagnostics object</span>
+<span class="sd">    forecast : forecast</span>
+<span class="sd">        community forecast for estimating future values</span>
+<span class="sd">        initial value: forecast</span>
+<span class="sd">    cd : dictionary</span>
+<span class="sd">        general data for a community.</span>
+<span class="sd">        Initial value: &#39;community&#39; section of community_data</span>
+<span class="sd">    comp_specs : dictionary</span>
+<span class="sd">        component specific data for a community.</span>
+<span class="sd">        Initial value: &#39;Non-Residential ASHP&#39; section of community_data</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    aaem.community_data :</span>
+<span class="sd">        community data module, see information on CommunityData Object</span>
+<span class="sd">    aaem.forecast :</span>
+<span class="sd">        forecast module, see information on Forecast Object</span>
+<span class="sd">    aaem.diagnostics :</span>
+<span class="sd">        diagnostics module, see information on diagnostics Object</span>
+<span class="sd">    aaem.components.non_residential :</span>
+<span class="sd">        &#39;Non-residential Energy Efficiency&#39; component is a required prerequisite</span>
+<span class="sd">        for this component</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community_data</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span>
+                        <span class="n">diag</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prerequisites</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Class initialiser</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        community_data : CommunityData</span>
+<span class="sd">            CommunityData Object for a community</span>
+<span class="sd">        forecast : Forecast</span>
+<span class="sd">            forecast for a community</span>
+<span class="sd">        diagnostics : diagnostics, optional</span>
+<span class="sd">            diagnostics for tracking error/warning messages</span>
+<span class="sd">        prerequisites : dictionary of components, optional</span>
+<span class="sd">            prerequisite component data,</span>
+<span class="sd">            &#39;Non-residential Energy Efficiency&#39; component</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span> <span class="o">=</span> <span class="n">COMPONENT_NAME</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ASHPNonResidential</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">community_data</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span>
+                                                    <span class="n">diag</span><span class="p">,</span> <span class="n">prerequisites</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span>
+
+        <span class="c1">### ADD other initialization stuff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ashp_sector_system</span> <span class="o">=</span> <span class="s2">&quot;non-residential&quot;</span>
+
+<div class="viewcode-block" id="ASHPNonResidential.load_prerequisite_variables"><a class="viewcode-back" href="../../../../aaem.components.ashp_non_res.html#aaem.components.ashp_non_res.component.ASHPNonResidential.load_prerequisite_variables">[docs]</a>    <span class="k">def</span> <span class="nf">load_prerequisite_variables</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comps</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loads square footage of Non-residential buildings and average</span>
+<span class="sd">        heating consumption per sqft(gal heating fuel/sqft)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        comps: Dictionary of components</span>
+<span class="sd">            Dictionary of components, needs &#39;Non-residential Energy Efficiency&#39;</span>
+<span class="sd">            key</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        non_res_sqft : float</span>
+<span class="sd">            Total square footage that may be refit of nonresidential buildings,</span>
+<span class="sd">            Will be set to 0 if a value cannot be found in</span>
+<span class="sd">            &#39;Non-residential Energy Efficiency&#39; component</span>
+<span class="sd">        avg_gal_per_sqft : float</span>
+<span class="sd">            Heating fuel consumption per square foot. Will be set to 0 if a,</span>
+<span class="sd">            value cannot be found in &#39;Non-residential Energy Efficiency&#39;</span>
+<span class="sd">            component</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">            KeyError</span>
+<span class="sd">                if &#39;Non-residential Energy Efficiency&#39; component not found.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;file id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">tag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;ASHP_res&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">non_res</span> <span class="o">=</span> <span class="n">comps</span><span class="p">[</span><span class="s1">&#39;Non-residential Energy Efficiency&#39;</span><span class="p">]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">non_res_sqft</span> <span class="o">=</span> <span class="n">non_res</span><span class="o">.</span><span class="n">total_sqft_to_retrofit</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_gal_per_sqft</span> <span class="o">=</span> <span class="n">non_res</span><span class="o">.</span><span class="n">baseline_fuel_Hoil_consumption</span><span class="o">/</span> \
+                                                            <span class="bp">self</span><span class="o">.</span><span class="n">non_res_sqft</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ZeroDivisionError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">non_res_sqft</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">avg_gal_per_sqft</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="ASHPNonResidential.calc_heat_energy_produced_per_year"><a class="viewcode-back" href="../../../../aaem.components.ashp_non_res.html#aaem.components.ashp_non_res.component.ASHPNonResidential.calc_heat_energy_produced_per_year">[docs]</a>    <span class="k">def</span> <span class="nf">calc_heat_energy_produced_per_year</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the heat energy produced per year by ASHP system</span>
+<span class="sd">        (TODO: Double check definition)</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        heat_displaced_sqft : float</span>
+<span class="sd">            Building Square footage that will be heated by ASHP</span>
+<span class="sd">        heat_energy_produced_per_year : float</span>
+<span class="sd">            Heat energy produced per year in BTU</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heat_displaced_sqft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_res_sqft</span> <span class="o">*</span>\
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span> <span class="s1">&#39;assumed percent non-residential sqft heat displacement&#39;</span><span class="p">]</span>\
+            <span class="o">/</span><span class="mf">100.0</span><span class="p">)</span>
+        <span class="n">average_net_btu_per_hr_pr_sf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_gal_per_sqft</span> <span class="o">*</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;heating oil efficiency&quot;</span><span class="p">]</span> <span class="o">*</span> \
+            <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span><span class="n">e6</span><span class="o">/</span> <span class="n">constants</span><span class="o">.</span><span class="n">hours_per_year</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heat_energy_produced_per_year</span> <span class="o">=</span> <span class="n">average_net_btu_per_hr_pr_sf</span> <span class="o">*</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">heat_displaced_sqft</span> <span class="o">/</span><span class="mi">1</span><span class="n">e6</span> <span class="o">*</span> <span class="n">constants</span><span class="o">.</span><span class="n">hours_per_year</span></div>
+
+        <span class="c1">#~ print self.heat_energy_produced_per_year</span>
+
+<div class="viewcode-block" id="ASHPNonResidential.run"><a class="viewcode-back" href="../../../../aaem.components.ashp_non_res.html#aaem.components.ashp_non_res.component.ASHPNonResidential.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;capital costs&#39;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">}):</span>
+        <span class="sd">&quot;&quot;&quot;Runs the component. The Annual Total Savings,Annual Costs,</span>
+<span class="sd">        Annual Net Benefit, NPV Benefits, NPV Costs, NPV Net Benefits,</span>
+<span class="sd">        Benefit Cost Ratio, Levelized Cost of Energy,</span>
+<span class="sd">        and Internal Rate of Return will all be calculated.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scalers: dictionary of valid scalers, optional</span>
+<span class="sd">            Scalers to adjust normal run variables.</span>
+<span class="sd">            See note on accepted  scalers</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run : bool</span>
+<span class="sd">            True in the component runs to completion, False otherwise</span>
+<span class="sd">        reason : string</span>
+<span class="sd">            lists reason for failure if run == False</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">            Accepted scalers: capital costs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span>
+
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;file id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">tag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;ASHP_non-res&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Not a non-residential air source heat pump project.&quot;</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model heating fuel&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_heat_energy_produced_per_year</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_ashp_system_parameters</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model financial&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_baseline_heating_oil_cost</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_proposed_ashp_operation_cost</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_capital_costs</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_electric_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_heating_savings</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_total_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;interest rate&#39;</span><span class="p">],</span>
+                                            <span class="n">scalers</span><span class="p">[</span><span class="s1">&#39;capital costs&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_net_benefit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_npv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;discount rate&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;current year&quot;</span><span class="p">])</span>
+        <span class="c1">#~ print &#39;self.monthly_value_table&#39;</span>
+        <span class="c1">#~ print self.monthly_value_table</span>
+        <span class="c1">#~ print &#39;self.electric_consumption&#39;,self.electric_consumption</span>
+        <span class="c1">#~ print &#39;self.heating_oil_saved&#39;,self.heating_oil_saved</span>
+        <span class="c1">#~ print &#39;self.average_cop&#39;,self.average_cop</span>
+        <span class="c1">#~ print &#39;self.baseline_heating_oil_cost&#39;,self.baseline_heating_oil_cost</span>
+        <span class="c1">#~ print &#39;self.proposed_ashp_operation_cost&#39;,self.proposed_ashp_operation_cost</span>
+        <span class="c1">#~ print self.capital_costs</span>
+        <span class="c1">#~ print self.benefit_cost_ratio</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_levelized_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proposed_ashp_operation_cost</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Financial modeling disabled for this community.&quot;</span></div>
+
+<div class="viewcode-block" id="ASHPNonResidential.calc_capital_costs"><a class="viewcode-back" href="../../../../aaem.components.ashp_non_res.html#aaem.components.ashp_non_res.component.ASHPNonResidential.calc_capital_costs">[docs]</a>    <span class="k">def</span> <span class="nf">calc_capital_costs</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Calculate the project Capital Costs.</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        total_cap_required : float</span>
+<span class="sd">            total ASHP capacity provided.</span>
+<span class="sd">        capital_costs : float</span>
+<span class="sd">            calculated capital costs for heat recovery</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">min_tem</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>\
+                                <span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="s1">&#39;Minimum Temp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+        <span class="n">temps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;performance data&#39;</span><span class="p">][</span><span class="s1">&#39;Temperature&#39;</span><span class="p">]</span>
+        <span class="n">percent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;performance data&#39;</span><span class="p">]</span>\
+                                    <span class="p">[</span><span class="s1">&#39;Percent of Total Capacity&#39;</span><span class="p">]</span>
+        <span class="n">percent_of_total_cap</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">percent</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">min_tem</span> <span class="o">&gt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">temps</span><span class="p">):</span>
+            <span class="n">m</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">temps</span><span class="p">,</span><span class="n">percent</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">percent_of_total_cap</span> <span class="o">=</span> <span class="n">m</span> <span class="o">*</span> <span class="n">min_tem</span> <span class="o">+</span> <span class="n">b</span>
+        <span class="n">percent_of_total_cap</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">percent_of_total_cap</span><span class="p">)</span>
+
+        <span class="n">peak_btu_per_hr_per_sf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">avg_gal_per_sqft</span> <span class="o">*</span> \
+                                    <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">constants</span><span class="o">.</span><span class="n">mmbtu_to_gal_HF</span><span class="p">)</span> <span class="o">*</span> \
+                                    <span class="mi">1</span><span class="n">e6</span> <span class="o">*</span> \
+                                    <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>\
+                                        <span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="s1">&#39;Peak Month </span><span class="si">% o</span><span class="s1">f total&#39;</span><span class="p">])</span>\
+                                    <span class="o">/</span> <span class="mi">24</span> <span class="o">/</span> <span class="mi">31</span>
+        <span class="n">peak_btu_per_hr</span> <span class="o">=</span>  <span class="n">peak_btu_per_hr_per_sf</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">heat_displaced_sqft</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">total_cap_required</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">peak_btu_per_hr</span> <span class="o">/</span> <span class="n">percent_of_total_cap</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_cap_required</span><span class="o">/</span> \
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;btu/hrs&quot;</span><span class="p">]</span> <span class="o">*</span>\
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;cost per btu/hrs&quot;</span><span class="p">]</span> <span class="o">*</span>\
+                                    <span class="bp">self</span><span class="o">.</span><span class="n">regional_multiplier</span></div>
+
+<div class="viewcode-block" id="ASHPNonResidential.save_component_csv"><a class="viewcode-back" href="../../../../aaem.components.ashp_non_res.html#aaem.components.ashp_non_res.component.ASHPNonResidential.save_component_csv">[docs]</a>    <span class="k">def</span> <span class="nf">save_component_csv</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the component output csv in directory</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        directory : path</span>
+<span class="sd">            output directory</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="n">years</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_life</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_year</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tcr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_cap_required</span>
+            <span class="n">prices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">electricity_prices</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">T</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">tcr</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">prices</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="c1">#~ print prices</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">({</span>
+            <span class="s2">&quot;Community&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="s2">&quot;Non-residential ASHP: Average Coefficient of Performance (COP)&quot;</span><span class="p">:</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">average_cop</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential ASHP: Heat Displacement square footage (sqft)&#39;</span><span class="p">:</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">heat_displaced_sqft</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential ASHP:&#39;</span>
+                    <span class="s1">&#39; Total Nameplate Capacity Needed (MMBtu/hour)&#39;</span><span class="p">:</span>
+                                                    <span class="n">tcr</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential ASHP: Electricity Price ($/kWh)&#39;</span><span class="p">:</span>
+                                                    <span class="n">prices</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential ASHP: kWh consumed per year (kWh/year)&#39;</span><span class="p">:</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">electric_consumption</span><span class="p">,</span>
+            <span class="s2">&quot;Non-residential ASHP: Displaced Heating Oil (gallons/year)&quot;</span><span class="p">:</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">heating_oil_saved</span><span class="p">,</span>
+            <span class="s2">&quot;Non-residential ASHP: Project Capital Cost ($/year)&quot;</span><span class="p">:</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">get_capital_costs</span><span class="p">(),</span>
+            <span class="s2">&quot;Non-residential ASHP: Total Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">get_total_savings_costs</span><span class="p">(),</span>
+            <span class="s2">&quot;Non-residential ASHP: Net Benefit ($/year)&quot;</span><span class="p">:</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">get_net_benefit</span><span class="p">(),</span>
+                       <span class="p">},</span> <span class="n">years</span><span class="p">)</span>
+
+        <span class="n">order</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Community&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Non-residential ASHP: Average Coefficient of Performance (COP)&quot;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential ASHP: Heat Displacement square footage (sqft)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential ASHP: &#39;</span>
+                            <span class="s1">&#39;Total Nameplate Capacity Needed (MMBtu/hour)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential ASHP: Electricity Price ($/kWh)&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Non-residential ASHP: kWh consumed per year (kWh/year)&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;Non-residential ASHP: Displaced Heating Oil (gallons/year)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Non-residential ASHP: Project Capital Cost ($/year)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Non-residential ASHP: Total Cost Savings ($/year)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Non-residential ASHP: Net Benefit ($/year)&quot;</span><span class="p">]</span>
+
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span>\
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;_output.csv&quot;</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+        <span class="c1"># save to end of project(actual lifetime)</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">order</span><span class="p">]</span><span class="o">.</span><span class="n">ix</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_end_year</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s2">&quot;Year&quot;</span><span class="p">)</span>
+
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span>\
+                            <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;_montly_table.csv&quot;</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">monthly_value_table</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

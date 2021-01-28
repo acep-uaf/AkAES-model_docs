@@ -1,0 +1,479 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>aaem.components.diesel_efficiency.component &mdash; Alaska Affordable Energy Model 0.17.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.17.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Alaska Affordable Energy Model 0.17.2 documentation" href="../../../../index.html" />
+    <link rel="up" title="aaem.components" href="../../components.html" />
+
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+<script type="text/javascript"  >
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-6824535-25', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for aaem.components.diesel_efficiency.component</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Diesel Efficiency component body</span>
+<span class="sd">--------------------------------</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">DataFrame</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<span class="kn">from</span> <span class="nn">aaem.components.annual_savings</span> <span class="k">import</span> <span class="n">AnnualSavings</span>
+<span class="kn">from</span> <span class="nn">aaem.community_data</span> <span class="k">import</span> <span class="n">CommunityData</span>
+<span class="kn">from</span> <span class="nn">aaem.forecast</span> <span class="k">import</span> <span class="n">Forecast</span>
+<span class="kn">from</span> <span class="nn">aaem.diagnostics</span> <span class="k">import</span> <span class="n">Diagnostics</span>
+<span class="kn">import</span> <span class="nn">aaem.constants</span> <span class="k">as</span> <span class="nn">constants</span>
+<span class="kn">from</span> <span class="nn">config</span> <span class="k">import</span> <span class="n">COMPONENT_NAME</span><span class="p">,</span> <span class="n">UNKNOWN</span>
+
+<div class="viewcode-block" id="DieselEfficiency"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency">[docs]</a><span class="k">class</span> <span class="nc">DieselEfficiency</span><span class="p">(</span><span class="n">AnnualSavings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Diesel Efficiency component of the Alaska Affordable Energy Model:</span>
+<span class="sd">    This module estimates the potential reduction in diesel fuel use from</span>
+<span class="sd">    improvements to the efficiency of a community&#39;s diesel generation systems.</span>
+<span class="sd">    Financial savings are from an assumed decrease in diesel oil used in generation.</span>
+<span class="sd">    Costs of the improvements are based on the assumed capacity of the improved system.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    community_data : CommunityData</span>
+<span class="sd">        CommunityData Object for a community</span>
+<span class="sd">    forecast : Forecast</span>
+<span class="sd">        forecast for a community</span>
+<span class="sd">    diagnostics : diagnostics, optional</span>
+<span class="sd">        diagnostics for tracking error/warning messages</span>
+<span class="sd">    prerequisites : dictionary of components, optional</span>
+<span class="sd">        prerequisite component data this component has no prerequisites</span>
+<span class="sd">        leave empty</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    diagnostics : diagnostics</span>
+<span class="sd">        for tracking error/warning messages</span>
+<span class="sd">        initial value: diag or new diagnostics object</span>
+<span class="sd">    forecast : forecast</span>
+<span class="sd">        community forecast for estimating future values</span>
+<span class="sd">        initial value: forecast</span>
+<span class="sd">    cd : dictionary</span>
+<span class="sd">        general data for a community.</span>
+<span class="sd">        Initial value: &#39;community&#39; section of community_data</span>
+<span class="sd">    comp_specs : dictionary</span>
+<span class="sd">        component specific data for a community.</span>
+<span class="sd">        Initial value: &#39;Diesel Efficiency&#39; section of community_data</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    aaem.community_data :</span>
+<span class="sd">        community data module, see information on CommunityData Object</span>
+<span class="sd">    aaem.forecast :</span>
+<span class="sd">        forecast module, see information on Forecast Object</span>
+<span class="sd">    aaem.diagnostics :</span>
+<span class="sd">        diagnostics module, see information on diagnostics Object</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">community_data</span><span class="p">,</span> <span class="n">forecast</span><span class="p">,</span>
+                        <span class="n">diag</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">prerequisites</span> <span class="o">=</span> <span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot;Class initialiser</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        community_data : CommunityData</span>
+<span class="sd">            CommunityData Object for a community</span>
+<span class="sd">        forecast : Forecast</span>
+<span class="sd">            forecast for a community</span>
+<span class="sd">        diagnostics : diagnostics, optional</span>
+<span class="sd">            diagnostics for tracking error/warning messages</span>
+<span class="sd">        prerequisites : dictionary of components, optional</span>
+<span class="sd">            prerequisite component data</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">=</span> <span class="n">diag</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diagnostics</span> <span class="o">=</span> <span class="n">diagnostics</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span> <span class="o">=</span> <span class="n">forecast</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cd</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="s1">&#39;community&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span> <span class="o">=</span> <span class="n">community_data</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">COMPONENT_NAME</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span> <span class="o">=</span> <span class="n">COMPONENT_NAME</span>
+
+        <span class="c1">#~ self.comp_specs[&quot;start year&quot;] = self.cd[&#39;current year&#39;] + \</span>
+            <span class="c1">#~ self.comp_specs[&quot;project details&quot;][&#39;expected years to operation&#39;]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_project_life_details</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;start year&quot;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s2">&quot;lifetime&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="DieselEfficiency.run"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;capital costs&#39;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">}):</span>
+        <span class="sd">&quot;&quot;&quot;runs the component. The Annual Total Savings,Annual Costs,</span>
+<span class="sd">        Annual Net Benefit, NPV Benefits, NPV Costs, NPV Net Benefits,</span>
+<span class="sd">        Benefit Cost Ratio, Levelized Cost of Energy,</span>
+<span class="sd">        and Internal Rate of Return will all be calculated. There must be a</span>
+<span class="sd">        known Heat Recovery project for this component to run.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        scalers: dictionary of valid scalers, optional</span>
+<span class="sd">            Scalers to adjust normal run variables.</span>
+<span class="sd">            See note on accepted  scalers</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        run : bool</span>
+<span class="sd">            True in the component runs to completion, False otherwise</span>
+<span class="sd">        reason : string</span>
+<span class="sd">            lists reason for failure if run == False</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">            Accepted scalers: capital costs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;OK&quot;</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;file id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">tag</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;diesel_efficiency&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Not a diesel efficiency project.&quot;</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model electricity&quot;</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="s2">&quot;Electricity must be modeled to analyze diesel&quot;</span> <span class="o">+</span>\
+                                <span class="s2">&quot; efficiency. It was not for this community&quot;</span>
+
+            <span class="k">return</span>
+            <span class="c1"># change these below</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_average_load</span><span class="p">()</span>
+        <span class="c1">#~ print  self.average_load</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;The Average diesel load is not available for this community. &quot;</span>
+                <span class="s2">&quot;Is diesel generation present?&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_max_capacity</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_baseline_generation_fuel_use</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_proposed_generation_fuel_use</span><span class="p">()</span>
+
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;model financial&quot;</span><span class="p">]:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_diesel_prices</span><span class="p">()</span>
+
+            <span class="c1"># change these below</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_capital_costs</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_oppex</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_electric_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_heating_savings</span><span class="p">()</span>
+
+            <span class="c1"># AnnualSavings functions (don&#39;t need to write)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_total_savings</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_costs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;interest rate&#39;</span><span class="p">],</span>
+                                            <span class="n">scalers</span><span class="p">[</span><span class="s1">&#39;capital costs&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_annual_net_benefit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_npv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;discount rate&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;current year&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_levelized_costs</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.calc_average_load"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.calc_average_load">[docs]</a>    <span class="k">def</span> <span class="nf">calc_average_load</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate the average load of the system</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        generation: array</span>
+<span class="sd">            array of diesel generation values per year (kWh/year)</span>
+<span class="sd">        average_load: float</span>
+<span class="sd">            average diesel generation load in first year of project (kW)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span><span class="o">.</span><span class="n">generation</span><span class="p">[</span><span class="s1">&#39;generation diesel&#39;</span><span class="p">]</span>\
+                                <span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_year</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">end_year</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">forecast</span><span class="o">.</span><span class="n">yearly_average_diesel_load</span><span class="o">.</span><span class="n">ix</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start_year</span><span class="p">]</span></div>
+
+        <span class="c1">#~ print &#39;self.average_load&#39;,self.average_load</span>
+
+
+<div class="viewcode-block" id="DieselEfficiency.calc_baseline_generation_fuel_use"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.calc_baseline_generation_fuel_use">[docs]</a>    <span class="k">def</span> <span class="nf">calc_baseline_generation_fuel_use</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculates baseline generation fuel use</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        baseline_diesel_efficiency : float</span>
+<span class="sd">            the diesel generation efficiency before any improvements</span>
+<span class="sd">            are made (Gal/kWh) [</span>
+<span class="sd">        baseline_generation_fuel_use : np.array</span>
+<span class="sd">            fuel used per year before improvements (gal)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_diesel_efficiency</span> <span class="o">=</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;diesel generation efficiency&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_generation_fuel_use</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">/</span> \
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_diesel_efficiency</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.calc_proposed_generation_fuel_use"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.calc_proposed_generation_fuel_use">[docs]</a>    <span class="k">def</span> <span class="nf">calc_proposed_generation_fuel_use</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculates proposed generation fuel use</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        proposed_diesel_efficiency : float</span>
+<span class="sd">            the diesel generation efficiency before any improvements</span>
+<span class="sd">            are made (Gal/kWh)</span>
+<span class="sd">        proposed_generation_fuel_use : np.array</span>
+<span class="sd">            fuel used per year after improvements (gal)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_diesel_efficiency</span> <span class="o">=</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s2">&quot;diesel generation efficiency&quot;</span><span class="p">]</span> <span class="o">*</span> \
+                        <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;efficiency improvement&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">100.0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_fuel_use</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span> <span class="o">/</span> \
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_diesel_efficiency</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.calc_max_capacity"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.calc_max_capacity">[docs]</a>    <span class="k">def</span> <span class="nf">calc_max_capacity</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate max load and capacity</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_load : float</span>
+<span class="sd">            maximum load over project lifetime (KWh)</span>
+<span class="sd">        max_capacity: float</span>
+<span class="sd">            proposed max capacity (KWh)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_load</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_project_life</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> \
+                                                    <span class="n">constants</span><span class="o">.</span><span class="n">hours_per_year</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_capacity</span> <span class="o">=</span> <span class="mf">13.416</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_load</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="mf">0.146</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.calc_capital_costs"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.calc_capital_costs">[docs]</a>    <span class="k">def</span> <span class="nf">calc_capital_costs</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate the capital costs</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        capital_costs : float</span>
+<span class="sd">             total cost of improvements ($), calculated from max_capacity</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">capital_costs</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.8</span> <span class="o">+</span> <span class="o">.</span><span class="mi">001</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_capacity</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000000</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.calc_oppex"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.calc_oppex">[docs]</a>    <span class="k">def</span> <span class="nf">calc_oppex</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate the operational costs</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        oppex : float</span>
+<span class="sd">            operational costs per year ($) read from o&amp;m costs table</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#~ key = &#39;else&#39;</span>
+        <span class="c1">#~ for max_load in sorted(self.comp_specs[&#39;o&amp;m costs&#39;].keys())[:-1]:</span>
+            <span class="c1">#~ if self.average_load &lt;= max_load:</span>
+                <span class="c1">#~ key = max_load</span>
+                <span class="c1">#~ break</span>
+
+        <span class="n">costs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;o&amp;m costs&#39;</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">kW</span> <span class="ow">in</span> <span class="n">costs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">average_load</span> <span class="o">&lt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">kW</span><span class="p">):</span>
+                    <span class="n">maintenance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;o&amp;m costs&#39;</span><span class="p">][</span><span class="n">kW</span><span class="p">]</span>
+                    <span class="k">break</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">maintenance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comp_specs</span><span class="p">[</span><span class="s1">&#39;o&amp;m costs&#39;</span><span class="p">][</span><span class="n">kW</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">oppex</span> <span class="o">=</span>  <span class="n">maintenance</span><span class="c1">#self.comp_specs[&#39;o&amp;m costs&#39;][key]</span></div>
+
+
+<div class="viewcode-block" id="DieselEfficiency.calc_annual_electric_savings"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.calc_annual_electric_savings">[docs]</a>    <span class="k">def</span> <span class="nf">calc_annual_electric_savings</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate annual electric savings created by the project</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        annual_electric_savings : np.array</span>
+<span class="sd">            electric savings ($/year) are the difference in the base</span>
+<span class="sd">        and proposed fuel costs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diesel_prices</span>
+
+        <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_generation_fuel_use</span> <span class="o">*</span> <span class="n">price</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">oppex</span>
+        <span class="c1">#~ print self.baseline_generation_fuel_use</span>
+        <span class="n">proposed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_fuel_use</span> <span class="o">*</span> <span class="n">price</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">oppex</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">annual_electric_savings</span> <span class="o">=</span> <span class="n">base</span> <span class="o">-</span> <span class="n">proposed</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.calc_annual_heating_savings"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.calc_annual_heating_savings">[docs]</a>    <span class="k">def</span> <span class="nf">calc_annual_heating_savings</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;calculate annual heating savings created by the project</span>
+
+<span class="sd">        Attributes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        annual_heating_savings : flaot</span>
+<span class="sd">            no savings from heating</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annual_heating_savings</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.get_fuel_total_saved"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.get_fuel_total_saved">[docs]</a>    <span class="k">def</span> <span class="nf">get_fuel_total_saved</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;get total fuel saved</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            the total fuel saved in gallons</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">baseline_generation_fuel_use</span> <span class="o">-</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_fuel_use</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.get_total_energy_produced"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.get_total_energy_produced">[docs]</a>    <span class="k">def</span> <span class="nf">get_total_energy_produced</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;get total energy produced</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            the total energy produced</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="c1"># / constants.mmbtu_to_gal_HF</span></div>
+
+<div class="viewcode-block" id="DieselEfficiency.save_component_csv"><a class="viewcode-back" href="../../../../aaem.components.diesel_efficiency.html#aaem.components.diesel_efficiency.component.DieselEfficiency.save_component_csv">[docs]</a>    <span class="k">def</span> <span class="nf">save_component_csv</span> <span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">directory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save the component output csv in directory</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        directory : path</span>
+<span class="sd">            output directory</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">was_run</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">years</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">project_life</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_year</span>
+
+        <span class="n">df</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">({</span>
+                <span class="s2">&quot;Diesel Efficiency: Generation (kWh/year)&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">generation</span><span class="p">,</span>
+                <span class="s1">&#39;Diesel Efficiency: Baseline Diesel&#39;</span>
+                    <span class="s1">&#39; Generator Efficiency [Gal/kWh]&#39;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">baseline_diesel_efficiency</span><span class="p">,</span>
+                <span class="s1">&#39;Diesel Efficiency: Proposed Diesel&#39;</span>
+                    <span class="s1">&#39; Generator Efficiency [Gal/kWh]&#39;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">proposed_diesel_efficiency</span><span class="p">,</span>
+                <span class="s1">&#39;Diesel Efficiency: Utility Diesel Baseline (gallons/year)&#39;</span><span class="p">:</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_generation_fuel_use</span><span class="p">,</span>
+                <span class="s1">&#39;Diesel Efficiency: Utility Diesel Proposed (gallons/year)&#39;</span><span class="p">:</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_fuel_use</span><span class="p">,</span>
+                <span class="s1">&#39;Diesel Efficiency: Utility Diesel Displaced (gallons/year)&#39;</span><span class="p">:</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">baseline_generation_fuel_use</span> <span class="o">-</span> \
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">proposed_generation_fuel_use</span><span class="p">,</span>
+                <span class="s2">&quot;Diesel Efficiency: Electricity Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">get_electric_savings_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Diesel Efficiency: Project Capital Cost ($/year)&quot;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">get_capital_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Diesel Efficiency: Total Cost Savings ($/year)&quot;</span><span class="p">:</span>
+                                            <span class="bp">self</span><span class="o">.</span><span class="n">get_total_savings_costs</span><span class="p">(),</span>
+                <span class="s2">&quot;Diesel Efficiency: Net Benefit ($/year)&quot;</span><span class="p">:</span>
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">get_net_benefit</span><span class="p">(),</span>
+                       <span class="p">},</span> <span class="n">years</span><span class="p">)</span>
+
+        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;Community&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+
+        <span class="n">ol</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Community&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Diesel Efficiency: Generation (kWh/year)&quot;</span><span class="p">,</span>
+              <span class="s1">&#39;Diesel Efficiency: Baseline Diesel&#39;</span>
+                    <span class="s1">&#39; Generator Efficiency [Gal/kWh]&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Diesel Efficiency: Proposed Diesel&#39;</span>
+                    <span class="s1">&#39; Generator Efficiency [Gal/kWh]&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Diesel Efficiency: Utility Diesel Baseline (gallons/year)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Diesel Efficiency: Utility Diesel Proposed (gallons/year)&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;Diesel Efficiency: Utility Diesel Displaced (gallons/year)&#39;</span><span class="p">,</span>
+              <span class="s2">&quot;Diesel Efficiency: Electricity Cost Savings ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Diesel Efficiency: Project Capital Cost ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Diesel Efficiency: Total Cost Savings ($/year)&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;Diesel Efficiency: Net Benefit ($/year)&quot;</span><span class="p">]</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory</span><span class="p">,</span>
+                             <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> \
+                             <span class="bp">self</span><span class="o">.</span><span class="n">component_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;_output.csv&quot;</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+        <span class="n">df</span><span class="p">[</span><span class="n">ol</span><span class="p">]</span><span class="o">.</span><span class="n">ix</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">actual_end_year</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s2">&quot;Year&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../components.html">aaem.components</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, AEA, GINA.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
